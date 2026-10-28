@@ -217,6 +217,33 @@ h1{font-weight:600}
 .round-btn[disabled]{opacity:.35;cursor:default}
 .tiny{font-size:.75rem;color:var(--muted)}
 .tiny a{color:inherit}
+.myth{background:linear-gradient(150deg,var(--surface) 30%,var(--accent-soft))}
+.myth-head{display:flex;gap:12px;align-items:center}
+.mini-fruit{width:58px;height:58px;flex:none}
+.mini-fruit svg{width:100%;height:100%;display:block}
+.claim{font-size:1.25rem;line-height:1.25}
+.guess{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.guess-myth{background:var(--accent-soft);color:var(--accent);font-family:var(--f-display);font-size:1.05rem}
+.guess-fact{background:var(--ok-soft);color:var(--ok);font-family:var(--f-display);font-size:1.05rem}
+.reveal{display:flex;flex-direction:column;gap:8px;animation:flip .45s ease both;transform-origin:50% 0}
+@keyframes flip{from{opacity:0;transform:perspective(600px) rotateX(-60deg)}to{opacity:1;transform:none}}
+.verdict-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.verdict{font-family:var(--f-display);font-weight:600;font-size:1.1rem;padding:6px 14px;border-radius:999px;white-space:nowrap}
+.verdict.sm{font-size:.8rem;padding:3px 10px;flex:none}
+.v-myth{background:var(--accent-soft);color:var(--accent)}
+.v-partly{background:var(--you-soft);color:var(--ink)}
+.v-fact{background:var(--ok-soft);color:var(--ok)}
+details summary{cursor:pointer;list-style:none}
+details summary::-webkit-details-marker{display:none}
+.why summary{font-weight:800;color:var(--accent);min-height:32px;display:flex;align-items:center}
+.why a{color:var(--accent);font-weight:700}
+.safety{background:var(--warn-soft);border-radius:12px;padding:8px 12px;font-weight:700}
+.lib{border-top:1px solid var(--line);padding:12px 0}
+.lib:first-child{border-top:0;padding-top:4px}
+.lib summary{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;font-weight:700}
+.lib-claim{min-width:0}
+.lib summary .chip{white-space:nowrap;flex:none}
+.lib .reveal{margin-top:8px}
 .mile a,.evid a{color:var(--accent);font-weight:700}
 .pill{background:var(--surface);color:var(--accent);font-weight:800}
 .track{height:12px;border-radius:6px}
@@ -299,6 +326,7 @@ h1{font-weight:600}
       </div>
       <div class="card span2" id="todayCard"></div>
       <div class="card span2 tip" id="linkTip" hidden></div>
+      <div class="card span2 myth" id="mythCard"></div>
       <div class="card span2" id="stageCard"></div>
       <div class="card span2" id="comingCard"></div>
       <div class="card" id="tileDays"></div>
@@ -339,6 +367,7 @@ h1{font-weight:600}
       </div>
     </div>
     <div class="card" id="patCard"></div>
+    <div class="card" id="mythLib"></div>
     <div class="card">
       <div class="cmp-top"><h2>Your trend</h2><select id="trendSym" aria-label="Symptom to chart"></select></div>
       <div class="chartbox" id="trend"></div>
@@ -556,6 +585,154 @@ function renderFruit(){
   document.getElementById("fruitNow").hidden=fw===wk;
   document.getElementById("fruitPrev").disabled=fw<=4;document.getElementById("fruitNext").disabled=fw>=40;
 }
+/* ---------- Myth or fact? (each verdict checked against the linked source) ---------- */
+var MYTHS=[
+ {w:4,k:"morning",c:"Morning sickness only happens in the morning.",v:"myth",
+  a:"For most people it can strike at any time of day.",
+  y:"In a study that tracked 160 women daily, only 1.8% had sickness just in the morning. 80% had nausea that lasted all day.",
+  s:["Lacroix et al. 2000","https://pubmed.ncbi.nlm.nih.gov/10764476/"]},
+ {w:6,k:"two",c:"You need to eat for two.",v:"myth",
+  a:"You don't need extra calories for most of pregnancy.",
+  y:"NHS advice is that you only need about 200 extra calories a day, and only in the last three months.",
+  s:["Liverpool Women's NHS","https://www.liverpoolwomens.nhs.uk/our-services/maternity/top-tips-for-a-healthy-pregnancy/"]},
+ {w:7,k:"coffee",c:"You have to give up coffee completely.",v:"partly",
+  a:"You don't have to stop, just keep caffeine under 200mg a day.",
+  y:"UK advice is that you can have up to 200mg of caffeine a day. Remember coffee isn't the only source of caffeine.",
+  s:["NI Direct (NHS guidance)","https://nidirect.gov.uk/node/16373"]},
+ {w:8,k:"sickgirl",c:"Really bad sickness means you're having a girl.",v:"partly",
+  a:"There's a small real link, but it can't predict your baby's sex.",
+  y:"Several studies, including a large Swedish registry study, found severe sickness more common with girls. But lots of people carrying boys are very sick too, so it's no use as a predictor.",
+  s:["Young et al. 2020","https://projects.iq.harvard.edu/sites/projects.iq.harvard.edu/files/epl/files/young2020_article_doesgreatermorningsicknesspred.pdf"]},
+ {w:9,k:"cat",c:"You'll have to get rid of your cat.",v:"myth",
+  a:"Your cat can stay. Just take care with the litter tray.",
+  y:"The worry is toxoplasmosis, a parasite in cat poo. Wear gloves to empty the litter tray (or ask someone else), empty it daily, wear gloves when gardening and wash your hands well.",
+  s:["NI Direct (NHS guidance)","https://www.nidirect.gov.uk/conditions/toxoplasmosis"]},
+ {w:10,k:"heartbeat",c:"A fast heartbeat means a girl.",v:"myth",
+  a:"Baby's heart rate can't tell you the sex.",
+  y:"A 2023 review pooling 4,308 babies found no meaningful difference in early heart rate between boys and girls.",
+  s:["Nouri et al. 2023","https://bmcpregnancychildbirth.biomedcentral.com/articles/10.1186/s12884-023-05908-8"]},
+ {w:11,k:"exercise",c:"Exercise is risky when you're pregnant.",v:"myth",
+  a:"Exercise is safe and good for you both.",
+  y:"The NHS says you can usually keep doing what you already do. Avoid contact sports, anything with a high risk of falling, scuba diving, and lying flat on your back for long later on. Stop if you feel unwell or too hot.",
+  s:["NHS","https://nhs.uk/pregnancy/keeping-well/exercise/"]},
+ {w:12,k:"cheese",c:"You can't eat any cheese.",v:"partly",
+  a:"Most cheese is fine. Only some soft cheeses need to be cooked or avoided.",
+  y:"Hard cheeses like cheddar and parmesan are fine, as are pasteurised soft cheeses like mozzarella, feta and halloumi. Avoid brie, camembert and soft blue cheeses unless they're cooked until steaming hot.",
+  s:["NI Direct (NHS guidance)","https://nidirect.gov.uk/node/16373"]},
+ {w:13,k:"fish",c:"You should avoid fish.",v:"myth",
+  a:"Cooked fish is good for you. Just limit some kinds.",
+  y:"Have no more than 2 portions of oily fish (like salmon or mackerel) a week, and no more than 4 cans of tuna. Avoid raw fish, swordfish, shark and marlin.",
+  s:["NHS 111 Wales","https://111.wales.nhs.uk/LiveWell/Pregnancy/FoodsToAvoid"]},
+ {w:14,k:"hairy",c:"Lots of heartburn means a hairy baby.",v:"partly",
+  a:"Surprisingly, one small study did find a link.",
+  y:"A 2006 study of 64 women found more heartburn went with hairier newborns. A likely reason is that pregnancy hormones both relax the stomach valve and affect baby's hair growth. It's only one small study, though.",
+  s:["Main Line Health, on the 2006 study","https://www.mainlinehealth.org/blog/5-myths-about-pregnancy"]},
+ {w:15,k:"dye",c:"Dyeing your hair will harm the baby.",v:"myth",
+  a:"Most research shows hair dye is safe in pregnancy.",
+  y:"Very little dye is absorbed through the scalp. Some people wait until after 12 weeks. Do a strand test, wear gloves, use a well-ventilated room and rinse well.",
+  s:["NHS","https://www.nhs.uk/common-health-questions/pregnancy/is-it-safe-to-use-hair-dye-when-i-am-pregnant-or-breastfeeding/"]},
+ {w:16,k:"high",c:"Carrying high means a girl.",v:"myth",
+  a:"Your bump's shape can't predict the sex.",
+  y:"In a Johns Hopkins study of 104 women, folk methods like bump shape were right only 55% of the time, about the same as guessing.",
+  s:["Johns Hopkins, 1999","https://publichealth.jhu.edu/1999/predict-baby-sex"]},
+ {w:17,k:"fly",c:"Flying is unsafe in pregnancy.",v:"myth",
+  a:"Flying is usually safe if your pregnancy is straightforward.",
+  y:"Check your airline's rules before booking. Many stop flights late in pregnancy and may ask for a letter from your midwife or doctor confirming your due date.",
+  s:["NI Direct (NHS guidance)","https://nidirect.gov.uk/node/2075"]},
+ {w:18,k:"sexhurt",c:"Having sex can hurt the baby.",v:"myth",
+  a:"Sex is safe unless your midwife or doctor has said otherwise.",
+  y:"Your baby is protected inside the womb. Avoid sex if you have any bleeding or your waters have broken, and use condoms if there's any risk of infection.",
+  s:["Tommy's","https://www.tommys.org/pregnancy-information/im-pregnant/sex-pregnancy"]},
+ {w:20,k:"arms",c:"Raising your arms above your head wraps the cord around baby's neck.",v:"myth",
+  a:"There's no evidence for this. Stretch away.",
+  y:"The cord ends up around the neck in about 1 in 4 births, simply because babies move around. It's usually harmless, and nothing you do with your arms causes it.",
+  s:["Overview of research on nuchal cords","https://en.wikipedia.org/wiki/Nuchal_cord"]},
+ {w:21,k:"brain",c:"“Baby brain” is all in your head.",v:"myth",
+  a:"It's real. Pregnancy can affect memory a little.",
+  y:"A 2018 analysis of 20 studies found pregnant women scored lower on memory and planning tasks, especially in the third trimester.",
+  s:["Deakin University, 2018","https://www.deakin.edu.au/about-deakin/news-and-media-releases/articles/baby-brain-a-scientific-reality,-but-deakin-study-seeks-more-data"]},
+ {w:23,k:"stretch",c:"Creams and oils can prevent stretch marks.",v:"myth",
+  a:"No cream or oil has been shown to prevent them.",
+  y:"A Cochrane review of 6 trials with 800 women found skin preparations didn't stop stretch marks forming.",
+  s:["Cochrane, 2022","https://www.cochrane.org/CD000066"]},
+ {w:28,k:"moveless",c:"Babies move less near the end of pregnancy.",v:"myth",safety:true,
+  a:"Babies don't move less as they run out of room. Movements may feel different, but shouldn't slow down.",
+  y:"If your baby's movements slow down, stop or change, call your maternity unit straight away, day or night. Don't wait until the next day.",
+  s:["Tommy's","https://www.tommys.org/movements-matter-new-campaign-challenges-baby-movements-myths"]},
+ {w:29,k:"side",c:"The way you fall asleep matters late in pregnancy.",v:"fact",safety:true,
+  a:"True. From 28 weeks, go to sleep on your side.",
+  y:"Falling asleep on your back in late pregnancy is linked to a higher risk of stillbirth. Either side is fine. If you wake on your back, just turn over.",
+  s:["Tommy's","https://www.tommys.org/pregnancy-information/im-pregnant/sleep-position-pregnancy-qa"]},
+ {w:31,k:"firstlate",c:"First babies come late.",v:"partly",
+  a:"On average they arrive a little later, but only by about a day and a half.",
+  y:"In over 2 million US births, first pregnancies lasted about 1.4 days longer on average than later ones.",
+  s:["Epic Research, 2025","https://www.epicresearch.org/articles/data-confirms-firstborns-take-their-time-younger-siblings-born-sooner"]},
+ {w:32,k:"duedate",c:"Most babies arrive on their due date.",v:"myth",
+  a:"Only about 4 in 100 babies are born on their due date.",
+  y:"NHS maternity data found 4.3% of babies were born on their due date. Most arrive in the weeks either side.",
+  s:["NCIC (NHS data)","https://www.ncic.nhs.uk/maternity-data-may"]},
+ {w:33,k:"waters",c:"Labour always starts with your waters breaking.",v:"myth",
+  a:"Only around 1 in 10 people have their waters break before labour starts.",
+  y:"Waters break before labour in 8 to 10% of term pregnancies. Most people's break during labour. If yours do break, call your maternity unit.",
+  s:["Harrogate NHS","https://www.hdft.nhs.uk/pre-labour-rupture-of-membranes-at-term/"]},
+ {w:34,k:"raspberry",c:"Raspberry leaf tea brings on labour.",v:"myth",
+  a:"There's no good evidence it starts or shortens labour.",
+  y:"A 2021 review found the evidence weak, with no clear benefit shown in human studies. Talk to your midwife before taking any herbal remedy.",
+  s:["Bowman et al. 2021","https://doaj.org/article/a2ad0020b5f84fb681084e5a82fa7f31"]},
+ {w:35,k:"spicy",c:"A spicy curry will get labour going.",v:"myth",
+  a:"There's no evidence spicy food brings on labour.",
+  y:"Lots of people try it. In one US survey, 1 in 10 new mums had tried spicy food. But it's only a theory, and it can give you heartburn.",
+  s:["Ohio State University","https://news.osu.edu/walking-sex-and-spicy-food-are-favored-unprescribed-methods-to-bring-on-labor/"]},
+ {w:36,k:"sexlabour",c:"Having sex will bring on labour.",v:"myth",
+  a:"Sex doesn't start labour, and there's no evidence it helps.",
+  y:"It's safe to have sex late in pregnancy unless you've been told not to, or your waters have broken.",
+  s:["Tommy's","https://www.tommys.org/pregnancy-information/im-pregnant/sex-pregnancy"]},
+ {w:37,k:"moon",c:"A full moon brings on labour.",v:"myth",
+  a:"Births don't spike at full moon.",
+  y:"A Spanish study of 5,476 natural births found no link between the moon's phase and the number of births.",
+  s:["Anales de Pediatría, 2021","https://analesdepediatria.org/en-external-influences-on-birth-deliveries-articulo-S2341287920302040"]}
+];
+var VERD={myth:["Myth","v-myth"],partly:["Partly true","v-partly"],fact:["True","v-fact"]};
+var MG="bumpcompare.myths.v1";
+function mythGuesses(){try{return JSON.parse(localStorage.getItem(MG)||"{}")}catch(e){return state.mg||{}}}
+function saveGuess(k,g){var o=mythGuesses();o[k]=g;state.mg=o;try{localStorage.setItem(MG,JSON.stringify(o))}catch(e){}}
+function mythForWeek(wk){var m=MYTHS[0];MYTHS.forEach(function(x){if(x.w<=wk)m=x});return m}
+function guessResult(m,g){if(m.v==="partly")return ["Half right!","There's a grain of truth in this one."];var ok=(g==="fact")===(m.v==="fact");return ok?["You got it!",""]:["Not quite!",""]}
+function mythReveal(m,g){
+  var vd=VERD[m.v],r=guessResult(m,g);
+  return '<div class="reveal"><div class="verdict-row"><span class="verdict '+vd[1]+'">'+vd[0]+'</span><span class="small" style="font-weight:800">'+r[0]+'</span></div>'+
+    '<p style="font-weight:700">'+esc(m.a)+'</p>'+
+    '<details class="why"><summary>Why?</summary><p class="small">'+esc(m.y)+'</p><p class="tiny">Source: <a href="'+m.s[1]+'" target="_blank" rel="noopener">'+esc(m.s[0])+'</a></p></details>'+
+    (m.safety?'<p class="small safety">This one matters for your safety. If you’re ever unsure, call your maternity unit.</p>':"")+'</div>';
+}
+function mythCard(m,wk){
+  var g=mythGuesses()[m.k];
+  return '<div class="myth-head"><span class="mini-fruit" aria-hidden="true">'+fruitSVG(Math.max(4,Math.min(40,wk)))+'</span><div><span class="eyebrow">Myth or fact? · week '+m.w+'</span><h2 class="claim">“'+esc(m.c)+'”</h2></div></div>'+
+    (g?mythReveal(m,g):'<p class="small muted">What do you think?</p><div class="guess"><button class="btn guess-myth" type="button" data-guess="myth" data-k="'+m.k+'">Myth</button><button class="btn guess-fact" type="button" data-guess="fact" data-k="'+m.k+'">Fact</button></div>');
+}
+function renderMythHome(){
+  var wk=Math.floor(gaDays(TODAY)/7),el=document.getElementById("mythCard");
+  el.innerHTML=mythCard(mythForWeek(wk),wk);
+}
+function renderMythLib(){
+  var wk=Math.floor(gaDays(TODAY)/7),gs=mythGuesses(),seen=MYTHS.filter(function(m){return m.w<=wk}),later=MYTHS.length-seen.length;
+  var answered=seen.filter(function(m){return gs[m.k]}),right=answered.filter(function(m){var r=guessResult(m,gs[m.k])[0];return r!=="Not quite!"}).length;
+  var h='<div class="cmp-top"><h2>Myth busters</h2>'+(answered.length?'<span class="chip you">'+right+' of '+answered.length+' right</span>':"")+'</div><p class="small muted">Every myth so far. Tap one to see the answer. A new one unlocks most weeks.</p><div>';
+  seen.slice().reverse().forEach(function(m){
+    var g=gs[m.k],vd=VERD[m.v];
+    h+='<details class="lib"><summary><span class="lib-claim">“'+esc(m.c)+'”</span>'+(g?'<span class="verdict sm '+vd[1]+'">'+vd[0]+'</span>':'<span class="chip">Guess it</span>')+'</summary>'+
+      (g?mythReveal(m,g):'<div class="guess" style="margin-top:8px"><button class="btn guess-myth" type="button" data-guess="myth" data-k="'+m.k+'">Myth</button><button class="btn guess-fact" type="button" data-guess="fact" data-k="'+m.k+'">Fact</button></div>')+'</details>';
+  });
+  h+='</div>'+(later?'<p class="tiny">'+later+' more to come as your pregnancy goes on.</p>':"");
+  document.getElementById("mythLib").innerHTML=h;
+}
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-guess]");if(!b)return;
+  saveGuess(b.dataset.k,b.dataset.guess);
+  if(state.view==="home")renderMythHome();
+  if(state.view==="log")renderMythLib();
+});
+
 /* ---------- home ---------- */
 function latest(){var k=Object.keys(state.days).sort();return k.length?{date:k[k.length-1],e:state.days[k[k.length-1]]}:null}
 function focusSym(){
@@ -571,6 +748,7 @@ function renderHome(){
   document.getElementById("trimPill").textContent=wk<13?"1st trimester":(wk<27?"2nd trimester":"3rd trimester");
   document.getElementById("dueText").textContent="Due "+fmt(state.due);
   renderFruit();
+  renderMythHome();
 
   var t=state.days[TODAY],tc=document.getElementById("todayCard");
   if(t){
@@ -848,6 +1026,7 @@ trendSel.addEventListener("change",renderLog);
 function renderLog(){
   document.getElementById("notesText").textContent=buildNotes();
   renderPatterns();
+  renderMythLib();
   var keys=Object.keys(state.days).sort(),s=symBy(trendSel.value),box=document.getElementById("trend");
   if(!keys.length){box.innerHTML='<p class="empty">Your chart appears after your first check-in.</p>'}
   else{
