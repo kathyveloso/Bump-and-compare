@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Track your pregnancy symptoms, see what's typical at your week, and get notes for your midwife. Not medical advice.">
+<meta name="theme-color" content="#FFD9DF">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Bump &amp; Compare</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: playful phone app — pastel bento cards, a fruit-size hero, fixed bottom tab bar; check-in is one question per screen */
+:root{
+  --bg:#FFF7F4; --surface:#FFFFFF; --surface-2:#FCEDEA; --ink:#3A2734; --muted:#7D6474; --line:#F2DED9;
+  --accent:#C9466F; --accent-ink:#FFFFFF; --accent-soft:#FBE0E8;
+  --hero-a:#FFD9DF; --hero-b:#FFE9CF; --hero-c:#E2F3E4;
+  --you:#E08E12; --you-soft:#FFF0CF;
+  --warn:#C2362F; --warn-soft:#FDE2DE; --ok:#2B8556; --ok-soft:#DDF3E5;
+  --dot-off:#F2DED9;
+  --shadow:0 2px 4px rgba(201,70,111,.05),0 10px 24px rgba(201,70,111,.08);
+  --f-display:"Fredoka","Nunito",ui-rounded,system-ui,sans-serif;
+  --f-body:"Nunito",ui-rounded,system-ui,sans-serif;
+  --r-lg:28px; --r-md:20px;
+  --heart:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21.5S2 15.4 2 8.3A5.3 5.3 0 0 1 12 5.6a5.3 5.3 0 0 1 10 2.7c0 7.1-10 13.2-10 13.2z'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#1C1519; --surface:#2A1F26; --surface-2:#362831; --ink:#F7E9EF; --muted:#C2A6B5; --line:#3F2F39;
+  --accent:#F48FB0; --accent-ink:#2A1F26; --accent-soft:#4A2A38;
+  --hero-a:#4A2A38; --hero-b:#463424; --hero-c:#253A2E;
+  --you:#F6C155; --you-soft:#41341C;
+  --warn:#F7897A; --warn-soft:#4A2421; --ok:#86D3A3; --ok-soft:#1F3A2A;
+  --dot-off:#46353F; --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1C1519; --surface:#2A1F26; --surface-2:#362831; --ink:#F7E9EF; --muted:#C2A6B5; --line:#3F2F39;
+  --accent:#F48FB0; --accent-ink:#2A1F26; --accent-soft:#4A2A38;
+  --hero-a:#4A2A38; --hero-b:#463424; --hero-c:#253A2E;
+  --you:#F6C155; --you-soft:#41341C;
+  --warn:#F7897A; --warn-soft:#4A2421; --ok:#86D3A3; --ok-soft:#1F3A2A;
+  --dot-off:#46353F; --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}
+
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:540px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 120px;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.015em;line-height:1.15}
+h1{font-size:1.75rem;font-weight:800}
+h2{font-size:1.35rem;font-weight:700}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+.num{font-variant-numeric:tabular-nums}
+.eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:4px}
+.brand{font-family:var(--f-display);font-weight:800;font-size:1.05rem;letter-spacing:-.01em}
+.sync{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block}
+.sync.local i{background:var(--you)}
+
+.card{background:var(--surface);border-radius:var(--r-lg);padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow);min-width:0}
+.bento{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bento .card{gap:6px}
+.span2{grid-column:1/-1}
+
+/* hero */
+.hero{background:linear-gradient(140deg,var(--hero-a),var(--hero-b));box-shadow:none}
+.ga-big{font-family:var(--f-display);font-weight:800;font-size:clamp(3rem,15vw,4.25rem);line-height:.95;letter-spacing:-.04em}
+.ga-big span{font-size:.38em;font-weight:600;letter-spacing:-.01em;margin-left:4px}
+.hero-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;padding:5px 11px;border-radius:999px;background:var(--surface);color:var(--ink)}
+.track{position:relative;height:10px;border-radius:5px;background:color-mix(in srgb,var(--surface) 70%,transparent);display:flex;overflow:visible}
+.track b{position:absolute;inset:0 auto 0 0;border-radius:5px;background:var(--accent)}
+.track em{position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:var(--surface);border:4px solid var(--accent);transform:translate(-50%,-50%)}
+.track-labels{display:grid;grid-template-columns:13fr 14fr 13fr;font-size:.75rem;color:var(--muted);font-weight:600}
+.track-labels span:nth-child(2){text-align:center}.track-labels span:nth-child(3){text-align:right}
+.linkbtn{background:none;border:0;color:var(--accent);font-weight:700;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;min-height:32px}
+.duebox{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.duebox input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+
+.btn{border:0;border-radius:999px;padding:14px 20px;font-weight:700;cursor:pointer;min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .12s ease}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.soft{background:var(--surface-2);color:var(--ink)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.6}
+
+.stat{font-family:var(--f-display);font-weight:800;font-size:2rem;line-height:1;letter-spacing:-.03em}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;font-size:.8rem;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--surface-2);color:var(--ink)}
+.chip.you{background:var(--you-soft);box-shadow:inset 0 0 0 1px var(--you)}
+.chip.down{background:var(--ok-soft);color:var(--ok)}
+.chip.up{background:var(--warn-soft);color:var(--warn)}
+.chip.sev3{background:var(--warn-soft);color:var(--warn)}
+
+/* dots: natural-frequency icon array */
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dots i{width:14px;height:14px;border-radius:50%;background:var(--dot-off)}
+.dots i.on{background:var(--accent)}
+.dots.big i{width:20px;height:20px}
+
+/* compare */
+.cmp{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;width:100%;cursor:pointer}
+.cmp:first-child{border-top:0;padding-top:4px}
+.cmp-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.cmp-name{font-weight:700}
+.cmp-sub{font-size:.85rem;color:var(--muted)}
+.cmp-freq{font-weight:700;font-size:.9rem;white-space:nowrap}
+.cmp[aria-expanded="true"] .cmp-name{color:var(--accent)}
+.detail{display:flex;flex-direction:column;gap:10px;padding:4px 0 14px}
+.chartbox{overflow-x:auto}
+svg text{font-family:var(--f-body);fill:var(--muted);font-size:10.5px}
+.legend{display:flex;gap:14px;font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.foot{font-size:.8rem;color:var(--muted)}
+.ahead-row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line);align-items:center}
+.ahead-row:first-child{border-top:0;padding-top:2px}
+.ahead-name{font-weight:700}
+.ahead-num{font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+.ahead-row .chips{grid-column:1/-1}
+.mile{display:flex;gap:10px;align-items:flex-start;font-size:.92rem}
+.mile i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--you);margin-top:6px}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:32px}
+.tip{background:var(--you-soft);box-shadow:none}
+.tip a,.pat a{color:var(--accent);font-weight:600}
+.seg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.seg button,.tags button{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 14px;min-height:44px;cursor:pointer;font-weight:600}
+.seg button[aria-pressed="true"],.tags button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.pat{display:flex;flex-direction:column;gap:4px;padding:12px 0;border-top:1px solid var(--line)}
+.pat:first-child{border-top:0;padding-top:0}
+.pat b{font-weight:700}
+.meter{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.meter b{display:block;height:100%;background:var(--accent);border-radius:4px}
+.evid{display:flex;flex-direction:column;gap:6px;align-items:flex-start;background:var(--surface-2);border-radius:var(--r-md);padding:12px 14px}
+.evid a{color:var(--accent);font-weight:600}
+
+/* check-in flow */
+.flow-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.back{background:var(--surface);border:0;border-radius:999px;width:44px;height:44px;display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow)}
+.back[hidden]{display:none}
+.progress{flex:1;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.progress b{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .25s ease}
+.stepcount{font-size:.8rem;color:var(--muted);font-weight:600;min-width:48px;text-align:right}
+.q{display:flex;flex-direction:column;gap:6px}
+.q h1{font-size:1.9rem}
+.explain{background:var(--surface-2);border-radius:var(--r-md);padding:10px 14px;font-size:.92rem;color:var(--ink)}
+.explain strong{font-weight:700}
+.options{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:14px;align-items:center;text-align:left;background:var(--surface);border:2px solid transparent;border-radius:var(--r-md);padding:14px 16px;cursor:pointer;box-shadow:var(--shadow);min-height:64px;transition:border-color .12s ease,background .12s ease}
+.opt .lvl{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);font-weight:800;font-family:var(--f-display)}
+.opt .lvl i{display:block;border-radius:50%;background:var(--accent)}
+.opt b{display:block;font-weight:700}
+.opt span.d{display:block;font-size:.88rem;color:var(--muted)}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.opt[aria-pressed="true"] .lvl{background:var(--accent);color:var(--accent-ink)}
+.opt[aria-pressed="true"] .lvl i{background:var(--accent-ink)}
+.datebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.datebar input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+textarea{font:inherit;width:100%;box-sizing:border-box;min-height:96px;padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--surface);color:var(--ink);resize:vertical}
+.flags{display:flex;flex-direction:column;gap:8px}
+.flag{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border-radius:14px;padding:12px 14px;cursor:pointer;box-shadow:var(--shadow);border:2px solid transparent}
+.flag input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--warn);flex:none}
+.flag.none input{accent-color:var(--accent)}
+.flag:has(input:checked){border-color:var(--warn);background:var(--warn-soft)}
+.flag.none:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.flag small{display:block;color:var(--muted);font-size:.84rem}
+.alert{border-radius:var(--r-md);padding:14px 16px;background:var(--warn-soft);border:2px solid var(--warn);display:flex;flex-direction:column;gap:4px}
+.alert strong{color:var(--warn);font-size:1.05rem}
+.copyline{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:700}
+.copyline code{font-family:inherit;background:var(--surface);padding:2px 8px;border-radius:8px;user-select:all}
+.savebar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:3}
+.done{align-items:flex-start}
+.done .tick{width:56px;height:56px;border-radius:50%;background:var(--ok-soft);display:grid;place-items:center}
+
+/* log */
+.entry{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid var(--line)}
+.entry:first-child{border-top:0;padding-top:0}
+.entry-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.empty{color:var(--muted);text-align:center;padding:20px 8px}
+select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)}
+pre.notes{white-space:pre-wrap;font-family:var(--f-body);font-size:.92rem;margin:0;background:var(--surface-2);border-radius:var(--r-md);padding:14px;user-select:text}
+.toast{font-size:.9rem;font-weight:700;color:var(--ok)}
+
+/* bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px));padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+.nav-in{max-width:540px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.nav button{border:0;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:14px;color:var(--muted);font-size:.74rem;font-weight:700;min-height:56px}
+.nav button svg{width:24px;height:24px}
+.nav button .ic{display:grid;place-items:center;width:52px;height:30px;border-radius:999px;transition:background .15s ease}
+.nav button[aria-current="page"]{color:var(--ink)}
+.nav button[aria-current="page"] .ic{background:var(--accent-soft);color:var(--accent)}
+.nav button.cta .ic{background:var(--accent);color:var(--accent-ink)}
+.nav button.cta[aria-current="page"] .ic{background:var(--accent);color:var(--accent-ink)}
+
+
+/* ---------- playful layer ---------- */
+h1,h2,h3{font-weight:600;letter-spacing:-.005em}
+h1{font-weight:600}
+.brand{font-family:var(--f-display);font-weight:600;font-size:1.15rem;display:inline-flex;align-items:center;gap:6px;color:var(--accent)}
+.brand i{width:18px;height:17px;background:var(--accent);-webkit-mask:var(--heart) center/contain no-repeat;mask:var(--heart) center/contain no-repeat;display:inline-block}
+.hero{background:linear-gradient(150deg,var(--hero-a),var(--hero-b) 55%,var(--hero-c));position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:var(--surface);opacity:.25;pointer-events:none}
+.ga-big{font-family:var(--f-display);font-weight:600;letter-spacing:-.02em}
+.hero-main{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.hero-text{min-width:0;display:flex;flex-direction:column;gap:4px}
+.fruit-wrap{width:clamp(112px,36vw,150px);aspect-ratio:1;max-width:100%;flex:none;border-radius:50%;background:radial-gradient(circle at 50% 55%,rgba(255,255,255,.7),rgba(255,255,255,0) 68%);position:relative;z-index:1}
+.fruit-wrap svg{width:100%;height:100%;display:block;animation:bob 3.4s ease-in-out infinite;transform-origin:50% 90%}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-5px) rotate(2deg)}}
+.fruit-bar{display:flex;align-items:center;gap:8px;background:color-mix(in srgb,var(--surface) 72%,transparent);border-radius:999px;padding:6px;position:relative;z-index:1}
+.fruit-line{flex:1;text-align:center;font-weight:700;font-size:.95rem;line-height:1.3;min-width:0}
+.fruit-line b{font-family:var(--f-display);font-weight:600;color:var(--accent);font-size:1.08rem}
+.round-btn{width:40px;height:40px;border-radius:50%;border:0;background:var(--surface);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow);flex:none;color:var(--accent)}
+.round-btn[disabled]{opacity:.35;cursor:default}
+.tiny{font-size:.75rem;color:var(--muted)}
+.tiny a{color:inherit}
+.mile a,.evid a{color:var(--accent);font-weight:700}
+.pill{background:var(--surface);color:var(--accent);font-weight:800}
+.track{height:12px;border-radius:6px}
+.track b{background:linear-gradient(90deg,var(--accent),var(--you))}
+.track em{width:22px;height:22px;border:0;background:var(--accent);-webkit-mask:var(--heart) center/contain no-repeat;mask:var(--heart) center/contain no-repeat}
+.btn.primary{box-shadow:0 6px 16px color-mix(in srgb,var(--accent) 30%,transparent)}
+.dots{gap:4px}
+.dots i,.dots.big i{border-radius:0;background:var(--dot-off);-webkit-mask:var(--heart) center/contain no-repeat;mask:var(--heart) center/contain no-repeat}
+.dots i{width:16px;height:15px}
+.dots.big i{width:22px;height:20px}
+.dots i.on{background:var(--accent)}
+.opt{border-radius:22px}
+.opt .lvl,.opt[aria-pressed="true"] .lvl{width:46px;height:46px;background:none;flex:none}
+.opt .lvl svg{width:46px;height:46px;display:block}
+.opt[aria-pressed="true"] .lvl svg{transform:scale(1.08)}
+.opt .lvl svg{transition:transform .15s ease}
+.journey{display:flex;align-items:center;gap:6px;background:var(--surface-2);border-radius:var(--r-md);padding:6px 12px 6px 6px;margin-bottom:6px}
+.journey .mini{width:52px;height:52px;flex:none}
+.journey .mini svg{width:100%;height:100%;display:block}
+.journey .arrow{color:var(--muted);font-weight:800}
+.journey .small{flex:1;min-width:0;font-weight:700}
+.done{align-items:center;text-align:center}
+.done .tick{position:relative;width:96px;height:96px;background:var(--ok-soft)}
+.done .tick svg.fr{width:84px;height:84px}
+.burst{position:absolute;inset:0;pointer-events:none}
+.burst i{position:absolute;left:50%;top:50%;width:16px;height:15px;background:var(--accent);-webkit-mask:var(--heart) center/contain no-repeat;mask:var(--heart) center/contain no-repeat;opacity:0;animation:pop 1.2s ease-out var(--d) both}
+.burst i:nth-child(3n+2){background:var(--you)}
+.burst i:nth-child(3n){background:var(--ok)}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}25%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% - 80px)) scale(1.1)}}
+.nav button[aria-current="page"] .ic{background:var(--accent-soft);color:var(--accent)}
+.nav button .ic{border-radius:999px}
+.chip{font-weight:700}
+.tip{background:linear-gradient(140deg,var(--you-soft),var(--accent-soft))}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.burst{display:none}}
+.fade{animation:fade .22s ease both}
+@keyframes fade{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="topbar">
+    <span class="brand"><i aria-hidden="true"></i>Bump &amp; Compare</span>
+    <span class="sync local" id="sync" role="status"><i></i><span>Saved on this device only</span></span>
+  </div>
+
+  <!-- HOME -->
+  <section id="view-home" class="fade">
+    <div class="bento">
+      <div class="card hero span2">
+        <div class="hero-meta">
+          <span class="eyebrow">This week</span>
+          <span class="pill" id="trimPill">2nd trimester</span>
+        </div>
+        <div class="hero-main">
+          <div class="hero-text">
+            <div class="ga-big num" id="gaBig">14<span>weeks</span></div>
+            <p class="small" id="gaSub">and 0 days · day 98 of 280</p>
+            <button class="linkbtn small" type="button" data-act="fruit-now" id="fruitNow" hidden style="align-self:flex-start">Back to this week</button>
+          </div>
+          <div class="fruit-wrap" id="fruitBig"></div>
+        </div>
+        <div class="fruit-bar">
+          <button class="round-btn" type="button" data-act="fruit-prev" id="fruitPrev" aria-label="Previous week"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <p class="fruit-line" id="fruitLine" aria-live="polite">Your baby is about the size of <b>a lemon</b></p>
+          <button class="round-btn" type="button" data-act="fruit-next" id="fruitNext" aria-label="Next week"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+        </div>
+        <p class="tiny">Size comparisons from <a href="https://www.motherandbaby.com/pregnancy-and-birth/pregnancy/pregnancy-week-by-week/how-big-is-my-baby-your-baby-in-fruit-and-veg/" target="_blank" rel="noopener">Mother&amp;Baby</a>. They're approximate, and every baby grows at their own pace.</p>
+        <div class="track" aria-hidden="true"><b id="trackFill" style="width:35%"></b><em id="trackDot" style="left:35%"></em></div>
+        <div class="track-labels" aria-hidden="true"><span>1st</span><span>2nd</span><span>3rd</span></div>
+        <div class="hero-meta">
+          <span class="small" id="dueText">Due 28 Apr 2027</span>
+          <button class="linkbtn small" id="editDue" type="button">Change due date</button>
+        </div>
+        <form class="duebox" id="dueForm" hidden>
+          <label for="dueInput" class="small">Due date</label>
+          <input type="date" id="dueInput">
+          <button class="btn soft" type="submit">Save</button>
+        </form>
+      </div>
+      <div class="card span2" id="todayCard"></div>
+      <div class="card span2 tip" id="linkTip" hidden></div>
+      <div class="card span2" id="stageCard"></div>
+      <div class="card span2" id="comingCard"></div>
+      <div class="card" id="tileDays"></div>
+      <div class="card" id="tileTrend"></div>
+      <div class="card span2" id="patTeaser"></div>
+    </div>
+  </section>
+
+  <!-- CHECK IN -->
+  <section id="view-checkin" hidden>
+    <div class="flow-head">
+      <button class="back" id="flowBack" type="button" aria-label="Previous question"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <div class="progress" aria-hidden="true"><b id="flowBar" style="width:10%"></b></div>
+      <span class="stepcount num" id="stepCount">1 of 8</span>
+    </div>
+    <div id="flowBody" class="fade" style="display:flex;flex-direction:column;gap:14px;margin-top:14px"></div>
+  </section>
+
+  <!-- COMPARE -->
+  <section id="view-compare" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="card hero">
+      <span class="eyebrow">At your stage</span>
+      <h1 id="cmpTitle">At 14 weeks</h1>
+      <p class="small">How many people report each symptom at your week, out of 10. Tap a symptom to see how it changes and where the figure comes from.</p>
+    </div>
+    <div class="card" id="cmpList"></div>
+    <p class="foot">Figures come from published studies, linked under each symptom. Where a study measured only some weeks, the weeks in between are smoothed, and the evidence label says how solid each figure is. These describe typical patterns across many women. They aren't live data from other users yet, and they can't tell you what's right for your pregnancy. Your midwife can.</p>
+  </section>
+
+  <!-- LOG -->
+  <section id="view-log" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="card">
+      <div><h2>Notes for your midwife</h2><p class="small muted">A plain summary of your last 14 days, ready to read out or copy.</p></div>
+      <pre class="notes" id="notesText"></pre>
+      <div class="chips" style="align-items:center">
+        <button class="btn primary" id="copyBtn" type="button">Copy notes</button>
+        <span class="toast" id="copyToast" role="status"></span>
+      </div>
+    </div>
+    <div class="card" id="patCard"></div>
+    <div class="card">
+      <div class="cmp-top"><h2>Your trend</h2><select id="trendSym" aria-label="Symptom to chart"></select></div>
+      <div class="chartbox" id="trend"></div>
+    </div>
+    <div class="card">
+      <h2>Check-ins</h2>
+      <div id="entries"></div>
+    </div>
+    <div class="card">
+      <h3>When to get help</h3>
+      <p class="small">Call your midwife or maternity triage, or NHS 111 out of hours, if you can't keep fluids down for 24 hours, are weeing less or it's dark, feel dizzy or faint, are losing weight, or feel very low or anxious most days. Call your maternity unit straight away for any bleeding or severe tummy pain, or later in pregnancy if the baby is moving less. In an emergency call 999.</p>
+    </div>
+  </section>
+</div>
+
+<nav class="nav" aria-label="Main">
+  <div class="nav-in">
+    <button type="button" data-view="home" aria-current="page"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span>Today</button>
+    <button type="button" data-view="checkin" class="cta"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Check in</button>
+    <button type="button" data-view="compare"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="7" r="2"/><circle cx="12" cy="7" r="2"/><circle cx="18" cy="7" r="2"/><circle cx="6" cy="15" r="2"/><circle cx="12" cy="15" r="2" fill="currentColor"/><circle cx="18" cy="15" r="2"/></svg></span>Compare</button>
+    <button type="button" data-view="log"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h12M8 12h12M8 18h8M4 6h.01M4 12h.01M4 18h.01"/></svg></span>Log &amp; notes</button>
+  </div>
+</nav>
+
+<script>
+(function(){
+"use strict";
+/* Each symptom: plain name, what it means, what each level means. Keys match saved data. */
+var SYMS=[
+  {k:"nausea",n:"Feeling sick",alt:"nausea",
+   q:"Have you felt sick today?",
+   ex:"<strong>Feeling sick</strong> means feeling queasy, like you might throw up. It doesn't include actually throwing up; that's the next question.",
+   lv:[["None","Not at all"],["Mild","Comes and goes. I can still eat and get on with my day"],["Moderate","On and off most of the day, or it puts me off food"],["Severe","Almost all the time. Hard to eat or drink anything"]],
+   pts:[[4,15],[6,55],[8,72],[9,74],[11,62],[12,52],[14,37],[16,28],[18,20],[20,13],[22,7],[28,5],[40,4]],
+   ev:"Good",evText:"Measured: 74% of women had nausea; half had stopped by 14 weeks and 9 in 10 by 22 weeks. Weeks in between are smoothed.",
+   src:[["Lacroix et al. 2000, 160 women, daily diaries","https://pubmed.ncbi.nlm.nih.gov/10764476/"],["Gadsby et al. 1993, 363 UK women","https://bjgp.org/content/43/371/245/"]]},
+  {k:"vomiting",n:"Vomiting",alt:"being sick, throwing up",
+   q:"Have you vomited today?",
+   ex:"<strong>Vomiting</strong> means actually throwing up. In the UK this is often called “being sick”.",
+   lv:[["None","I haven't thrown up"],["Once","Threw up one time"],["2 to 4 times","Threw up a few times"],["5+ times","Five or more times, or I can't keep drinks down"]],
+   pts:[[4,10],[6,36],[8,47],[9,48],[11,40],[12,34],[14,24],[16,18],[18,13],[20,8],[22,5],[28,3],[40,3]],
+   ev:"Some",evText:"Measured: about half (52%) of women vomit at some point in early pregnancy. The week-by-week shape is estimated from the nausea pattern.",
+   src:[["Gadsby et al. 1993, 363 UK women","https://bjgp.org/content/43/371/245/"]]},
+  {k:"tired",n:"Tiredness",alt:"fatigue",
+   q:"How tired have you felt today?",overall:90,
+   ex:"More tired than usual, even after a normal night's sleep.",
+   lv:[["None","Normal energy"],["Mild","A bit more tired than usual"],["Moderate","I needed a rest or a nap to get through"],["Severe","Exhausted. Struggling with everyday things"]],
+   pts:null,
+   ev:"Limited",evText:"Around 9 in 10 women report tiredness during pregnancy (94% in one study of 605 women). Studies don\u2019t give reliable figures for each week, so there\u2019s no curve for this one.",
+   src:[["Effati-Daryani et al. 2021, 605 women","https://pubmed.ncbi.nlm.nih.gov/34917276"]]},
+  {k:"heartburn",n:"Heartburn",alt:"indigestion",
+   q:"Any heartburn or indigestion today?",
+   ex:"A burning feeling in your chest or throat, or a sour taste, often after eating or when lying down.",
+   lv:[["None","Not at all"],["Mild","Once, and it settled quickly"],["Moderate","Several times, or it lasted a while"],["Severe","Most of the day, or it kept me awake"]],
+   pts:[[4,15],[8,22],[13,27],[20,39],[27,55],[34,72],[40,72]],
+   ev:"Good",evText:"Measured by trimester: 22% in the first, 39% in the second and 72% in the third. Weeks in between are smoothed.",
+   src:[["Marrero et al. 1992, 607 women","https://www.qxmd.com/r/1420011"]]},
+  {k:"back",n:"Back pain",alt:"",
+   q:"Any back pain today?",
+   ex:"Aching or pain anywhere in your back.",
+   lv:[["None","Not at all"],["Mild","A dull ache I can ignore"],["Moderate","Makes some things harder, like lifting or walking far"],["Severe","Hard to move, sit or sleep"]],
+   pts:[[4,15],[12,30],[18,45],[24,56],[30,62],[36,58],[40,58]],
+   ev:"Some",evText:"Measured from 24 weeks: 56% at 24 weeks, 62% at 30 and 58% at 36. Earlier weeks are estimated.",
+   src:[["Thorell & Kristiansson 2012, 520 Swedish women","https://bmcpregnancychildbirth.biomedcentral.com/articles/10.1186/1471-2393-12-30"]]},
+  {k:"sleep",n:"Trouble sleeping",alt:"",
+   q:"How did you sleep last night?",
+   ex:"Trouble falling asleep, staying asleep, or getting comfortable.",
+   lv:[["None","Slept as normal"],["Mild","Woke once or twice but slept OK"],["Moderate","Woke often, or slept a few hours less"],["Severe","Barely slept"]],
+   pts:[[4,50],[8,52],[13,48],[20,43],[27,50],[33,57],[38,68],[40,71]],
+   ev:"Some",evText:"Measured by trimester in two large studies: about half sleep poorly in the first trimester, fewer in the second, then more again, rising to about 7 in 10 near full term. Studies measure \u201cpoor sleep\u201d with a questionnaire, so figures vary.",
+   src:[["Zhang et al. 2021, 2,281 women","https://www.dovepress.com/prevalence-of-and-risk-factors-for-poor-sleep-during-different-trimest-peer-reviewed-fulltext-article-NSS"],["Fan et al. 2025, 626 women","https://doi.org/10.1186/s12888-025-06513-z"]]}
+];
+var WHEN=["Morning","Afternoon","Evening","All day"];
+var TAGS=[{k:"meal",n:"Skipped a meal"},{k:"smell",n:"Strong smells"},{k:"travel",n:"Travel"},{k:"stress",n:"Stressful day"},{k:"rich",n:"Spicy or fatty food"},{k:"busy",n:"Very busy day"}];
+var LINKS=[{a:["nausea","vomiting"],b:"heartburn",title:"Heartburn and sickness are linked",
+  t:"Heartburn can make pregnancy sickness worse. In one study of women with both, treating the heartburn also eased their nausea. Ask your pharmacist or midwife what\u2019s safe to take.",
+  src:["Gill et al. 2009","https://doaj.org/article/e9239d011be6420a950d5743f925bd3d"]}];
+var MILES=[
+  {from:16,to:24,t:"You may start to feel the baby move. Most people do between 16 and 24 weeks; in a first pregnancy it\u2019s often after 20 weeks.",src:["NHS Gateshead","https://www.gatesheadhealth.nhs.uk/resources/babys-movements/"]},
+  {from:18,to:21,t:"Your mid-pregnancy (\u201c20-week\u201d) scan is usually between 18 and 21 weeks.",src:["NHS","https://www.nhs.uk/pregnancy/your-pregnancy-care/20-week-scan/"]},
+  {from:24,to:40,t:"From 24 weeks, if your baby\u2019s movements slow down or change, call your maternity unit straight away. Don\u2019t wait until the next day.",src:null}
+];
+var MOODS=[["Low","Down, teary or worried"],["OK","Getting by"],["Good","Mostly positive"],["Great","Feeling really well"]];
+var FLAGS=[
+  {k:"fluids",t:"I can't keep any drinks down",s:"For 24 hours or more"},
+  {k:"urine",t:"I'm weeing much less, or it's dark",s:"A sign you may be dehydrated"},
+  {k:"dizzy",t:"I feel dizzy or faint",s:""},
+  {k:"weight",t:"I'm losing weight without trying",s:""},
+  {k:"bleed",t:"Any bleeding from my vagina",s:"Even spotting"},
+  {k:"pain",t:"Severe pain in my tummy",s:""},
+  {k:"lowmood",t:"I feel very low or anxious most days",s:"For two weeks or more"}
+];
+
+function pad(n){return (n<10?"0":"")+n}
+function localISO(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function toUTC(s){var p=s.split("-");return Date.UTC(+p[0],+p[1]-1,+p[2])}
+function addDays(s,n){var d=new Date(toUTC(s)+n*864e5);return d.getUTCFullYear()+"-"+pad(d.getUTCMonth()+1)+"-"+pad(d.getUTCDate())}
+function fmt(s,opt){return new Date(toUTC(s)).toLocaleDateString("en-GB",Object.assign({timeZone:"UTC"},opt||{day:"numeric",month:"short",year:"numeric"}))}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+var TODAY=localISO(new Date());
+function gaDays(date){return 280-Math.round((toUTC(state.due)-toUTC(date))/864e5)}
+function gaStr(date){var d=gaDays(date);if(d<0)return "–";return Math.floor(d/7)+"+"+(d%7)}
+function prevAt(sym,w){if(!sym.pts)return sym.overall;var p=sym.pts;if(w<=p[0][0])return p[0][1];for(var i=1;i<p.length;i++){if(w<=p[i][0]){var a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(w-a[0])/(b[0]-a[0])}}return p[p.length-1][1]}
+function inTen(p){var n=Math.round(p/10);return n<1?"Fewer than 1 in 10":"About "+n+" in 10"}
+function dots(p,cls){var n=Math.round(p/10),h='<span class="dots'+(cls?" "+cls:"")+'" aria-hidden="true">';for(var i=0;i<10;i++)h+='<i class="'+(i<n?"on":"")+'"></i>';return h+"</span>"}
+function symBy(k){return SYMS.find(function(s){return s.k===k})}
+function lvShort(s,v){return s.lv[v][0]}
+function trendWord(s,w){if(!s.pts)return {c:"",t:"Common all through pregnancy"};var p=prevAt(s,w),l=prevAt(s,w+4);return l<p-4?{c:"down",t:"Usually eases from here"}:(l>p+4?{c:"up",t:"Often gets more common later"}:{c:"",t:"Usually stays about the same"})}
+
+var state={due:"2027-04-28",days:{},view:"home",open:null,mode:"local",step:0,draft:null,date:TODAY,justSaved:false};
+
+/* ---------- storage ---------- */
+var LS="bumpcompare.v1",remote=null;
+function lsLoad(){try{var r=localStorage.getItem(LS);if(r){var o=JSON.parse(r);if(o.due)state.due=o.due;if(o.days)state.days=o.days}}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify({due:state.due,days:state.days}))}catch(e){}}
+async function saveDay(date,obj){state.days[date]=obj;if(remote){await remote.days.doc(date).set(obj)}else{lsSave()}}
+async function saveDue(d){state.due=d;if(remote){await remote.profile.set({due:d})}else{lsSave()}}
+lsLoad();
+function setSync(){
+  var el=document.getElementById("sync");
+  el.className="sync"+(state.mode==="remote"?"":" local");
+  el.querySelector("span").textContent=state.mode==="remote"?"Private to you · synced":"Saved on this device only";
+}
+async function connect(){
+  if(!window.claude||!window.claude.use)return;
+  try{
+    var db=await window.claude.use("db"),user=await window.claude.use("user");
+    if(!db||!user)return;
+    var uid=await user.id();if(!uid)return;
+    var profile=db.doc("data/users/"+uid+"/profile"),days=profile.collection("days");
+    remote={profile:profile,days:days};state.mode="remote";
+    var snap=await profile.get();
+    if(snap.exists&&snap.data().due)state.due=snap.data().due;else{try{await profile.set({due:state.due})}catch(e){}}
+    days.onSnapshot(function(qs){var o={};qs.docs.forEach(function(d){o[d.id]=d.data()});state.days=o;setSync();if(state.view!=="checkin")render()},
+      function(){remote=null;state.mode="local";setSync()});
+    setSync();if(state.view!=="checkin")render();
+  }catch(e){remote=null;state.mode="local";setSync()}
+}
+
+/* ---------- navigation ---------- */
+var VIEWS=["home","checkin","compare","log"];
+document.querySelectorAll(".nav button").forEach(function(b){b.addEventListener("click",function(){go(b.dataset.view)})});
+function go(v,opts){
+  state.view=v;
+  if(v==="checkin"&&!(opts&&opts.keep)){startFlow(state.date&&opts&&opts.date?opts.date:TODAY)}
+  document.querySelectorAll(".nav button").forEach(function(b){if(b.dataset.view===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  VIEWS.forEach(function(x){var el=document.getElementById("view-"+x);el.hidden=x!==v;if(x===v){el.classList.remove("fade");void el.offsetWidth;el.classList.add("fade")}});
+  try{history.replaceState(null,"","#"+v)}catch(e){}
+  window.scrollTo(0,0);render();
+}
+
+/* ---------- weekly size characters (original drawings; comparisons from Mother&Baby's week-by-week list) ---------- */
+var FRUIT_SRC=["Mother&Baby","https://www.motherandbaby.com/pregnancy-and-birth/pregnancy/pregnancy-week-by-week/how-big-is-my-baby-your-baby-in-fruit-and-veg/"];
+function fFace(x,y,s,light){var c=light?"#FFF4F0":"#3B2A2A";return '<g transform="translate('+x+' '+y+') scale('+(s||1)+')"><ellipse cx="-14" cy="7" rx="5" ry="3" fill="#FF8FA3" opacity=".6"/><ellipse cx="14" cy="7" rx="5" ry="3" fill="#FF8FA3" opacity=".6"/><circle cx="-8" cy="0" r="3.4" fill="'+c+'"/><circle cx="8" cy="0" r="3.4" fill="'+c+'"/><circle cx="-6.9" cy="-1.3" r="1.2" fill="'+(light?"#3B2A2A":"#fff")+'"/><circle cx="9.1" cy="-1.3" r="1.2" fill="'+(light?"#3B2A2A":"#fff")+'"/><path d="M-4.5 6Q0 10.5 4.5 6" fill="none" stroke="'+c+'" stroke-width="2.3" stroke-linecap="round"/></g>'}
+function fHL(x,y,rx,ry,rot){return '<ellipse cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" fill="#fff" opacity=".35" transform="rotate('+(rot||-30)+' '+x+' '+y+')"/>'}
+function fLeaf(x,y,rot,col,s){return '<path d="M0 0C6-9 18-10 25-3C18 5 7 6 0 0Z" fill="'+(col||"#6DBB5A")+'" transform="translate('+x+' '+y+') rotate('+(rot||-30)+') scale('+(s||1)+')"/>'}
+function fStem(x,y,h,col){return '<path d="M'+x+' '+y+'q1.5 -'+(h/2)+' 5 -'+h+'" stroke="'+(col||"#7A5233")+'" stroke-width="4" stroke-linecap="round" fill="none"/>'}
+function fStar(x,y,r,col){var p="";for(var i=0;i<10;i++){var a=Math.PI/5*i-Math.PI/2,rr=i%2?r*.42:r;p+=(i?"L":"M")+(x+rr*Math.cos(a)).toFixed(1)+" "+(y+rr*Math.sin(a)).toFixed(1)}return '<path d="'+p+'Z" fill="'+col+'"/>'}
+function fSpark(x,y,s){return '<path d="M'+x+' '+(y-s)+'Q'+x+' '+y+' '+(x+s)+' '+y+'Q'+x+' '+y+' '+x+' '+(y+s)+'Q'+x+' '+y+' '+(x-s)+' '+y+'Q'+x+' '+y+' '+x+' '+(y-s)+'Z" fill="#F5B83D"/>'}
+function fClip(id,shape){return '<clipPath id="'+id+'">'+shape+'</clipPath>'}
+var FRUITS={
+4:["a poppy seed",function(){return fSpark(36,40,7)+fSpark(86,48,5)+fSpark(80,88,6)+'<circle cx="60" cy="66" r="14" fill="#5B5568"/>'+fHL(55,60,4,2.5)+fFace(60,67,.45,true)}],
+5:["a sesame seed",function(){return '<path d="M60 34C77 50 79 76 60 92C41 76 43 50 60 34Z" fill="#F1DDAE"/>'+fHL(52,56,5,9,10)+fFace(60,70,.7)}],
+6:["a lentil",function(){return '<ellipse cx="60" cy="64" rx="32" ry="23" fill="#D98A4E"/><ellipse cx="60" cy="62" rx="25" ry="16" fill="#E7A06A"/>'+fFace(60,64,.8)}],
+7:["a blueberry",function(){return '<circle cx="60" cy="66" r="30" fill="#5C6FD1"/>'+fStar(60,40,9,"#3A468F")+fHL(46,56,7,4)+fFace(60,70,.9,true)}],
+8:["a kidney bean",function(){return '<path d="M38 52C38 32 70 28 84 44C94 56 90 86 70 90C58 92 60 78 52 78C42 78 38 68 38 52Z" fill="#B23A48"/>'+fHL(50,46,7,4)+fFace(66,62,.8,true)}],
+9:["an olive",function(){return fStem(64,36,10,"#6E8A3A")+fLeaf(66,30,-20,"#7FA34A",.7)+'<ellipse cx="60" cy="66" rx="23" ry="31" fill="#8FAA45" transform="rotate(-12 60 66)"/>'+fHL(52,54,5,8,10)+fFace(60,68,.75)}],
+10:["a prune",function(){return '<ellipse cx="60" cy="66" rx="29" ry="33" fill="#5E2F55"/><path d="M44 50q8 6 2 14M74 48q-6 8 0 16M50 84q10-4 20 0" stroke="#4A2343" stroke-width="2.4" fill="none" stroke-linecap="round"/>'+fFace(60,68,.85,true)}],
+11:["a lime",function(){return '<circle cx="26" cy="64" r="5" fill="#74B544"/><circle cx="94" cy="64" r="5" fill="#74B544"/><ellipse cx="60" cy="64" rx="33" ry="29" fill="#86C64F"/>'+fHL(46,52,8,5)+fFace(60,66,.9)}],
+12:["a plum",function(){return fStem(60,36,10)+'<circle cx="60" cy="66" r="32" fill="#8C4A9E"/><path d="M60 35q-7 31 0 62" stroke="#6E3A7E" stroke-width="2.4" opacity=".5" fill="none"/>'+fHL(44,54,8,5)+fFace(62,70,.95,true)}],
+13:["a peach",function(){return fLeaf(62,34,-35,"#6DBB5A",.9)+'<circle cx="60" cy="66" r="34" fill="#FFB38A"/><circle cx="72" cy="74" r="24" fill="#FF8F86" opacity=".45"/><path d="M58 33q-8 32 2 66" stroke="#E98A6E" stroke-width="2.4" opacity=".55" fill="none"/>'+fHL(42,54,8,5)+fFace(60,70,1)}],
+14:["a lemon",function(){return fLeaf(66,36,-25,"#6DBB5A",.9)+'<ellipse cx="21" cy="64" rx="6" ry="5" fill="#F6D33C"/><ellipse cx="99" cy="62" rx="6" ry="5" fill="#F6D33C"/><path d="M22 64C28 42 48 36 62 37C82 38 96 50 98 62C96 78 80 92 60 92C40 92 26 80 22 64Z" fill="#FBE04F"/>'+fHL(42,52,9,5)+fFace(60,66,1)}],
+15:["an apple",function(){return fStem(59,42,14)+fLeaf(62,32,-20,"#6DBB5A",.9)+'<path d="M60 44C44 32 22 40 24 66C26 90 44 102 60 96C76 102 94 90 96 66C98 40 76 32 60 44Z" fill="#EF5A4E"/>'+fHL(40,56,8,5)+fFace(60,70,1,true)}],
+16:["an avocado",function(){return '<path d="M60 24C75 24 77 44 81 54C91 70 91 100 60 100C29 100 29 70 39 54C43 44 45 24 60 24Z" fill="#5C8A3A"/>'+fHL(48,50,5,9,15)+fFace(60,72,.95,true)}],
+17:["a turnip",function(u){return fLeaf(58,36,-110,"#6DBB5A",1)+fLeaf(62,36,-70,"#5DAA4A",1)+'<path d="M60 96q3 8-2 16" stroke="#C9B9C7" stroke-width="3" fill="none" stroke-linecap="round"/><defs>'+fClip(u+"t",'<circle cx="60" cy="66" r="32"/>')+'</defs><g clip-path="url(#'+u+'t)"><rect x="20" y="30" width="80" height="80" fill="#F6F0F4"/><path d="M20 30H100V58Q80 64 60 60Q40 56 20 62Z" fill="#A065B5"/></g>'+fHL(44,52,7,4)+fFace(60,74,.95)}],
+18:["a pepper",function(){return '<path d="M60 42q0-10 9-15" stroke="#3F8A3A" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M34 50C34 36 50 36 60 42C70 36 86 36 86 50C90 68 86 92 72 96C66 98 64 92 60 92C56 92 54 98 48 96C34 92 30 68 34 50Z" fill="#E8463C"/>'+fHL(42,56,5,10,10)+fFace(60,68,.95,true)}],
+19:["a heritage tomato",function(){return '<path d="M24 66C22 46 40 38 52 42C56 36 66 36 70 42C84 38 100 48 96 66C94 86 78 98 60 98C42 98 26 86 24 66Z" fill="#E5553F"/><path d="M42 46q-6 20 2 44M78 46q6 20-2 44" stroke="#C9412F" stroke-width="2.2" opacity=".55" fill="none"/>'+fStar(60,41,11,"#4F9A44")+fHL(38,58,7,4)+fFace(60,72,1,true)}],
+20:["a banana",function(){return '<path d="M20 48C24 84 58 102 94 84C100 80 98 72 91 74C64 84 40 72 34 48C32 40 20 40 20 48Z" fill="#F7D64C"/><path d="M28 54C34 74 54 86 80 82" stroke="#E9BE2E" stroke-width="2.4" fill="none" stroke-linecap="round"/><circle cx="23" cy="44" r="4" fill="#7A5233"/><circle cx="95" cy="79" r="4" fill="#7A5233"/>'+fFace(58,74,.8)}],
+21:["a carrot",function(){return fLeaf(60,40,-120,"#5DAA4A",.9)+fLeaf(60,40,-90,"#6DBB5A",1)+fLeaf(60,40,-60,"#5DAA4A",.9)+'<path d="M42 42C50 37 70 37 78 42C78 64 67 92 60 106C53 92 42 64 42 42Z" fill="#F48A30"/><path d="M48 56h8M64 70h8M52 84h6" stroke="#D96F1C" stroke-width="2.4" stroke-linecap="round"/>'+fFace(60,58,.75)}],
+22:["a spaghetti squash",function(){return fStem(60,36,8,"#8A6A3A")+'<ellipse cx="60" cy="66" rx="44" ry="31" fill="#F7D35C"/><path d="M30 54q30-8 60 0M28 70q32 6 64 0M36 84q24 6 48 0" stroke="#E8BE3E" stroke-width="2.4" fill="none" stroke-linecap="round"/>'+fFace(60,66,1)}],
+23:["a mango",function(u){return '<defs><linearGradient id="'+u+'m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFC44A"/><stop offset="1" stop-color="#F2603F"/></linearGradient></defs>'+fLeaf(74,34,-40,"#5DAA4A",1)+'<path d="M30 70C26 44 52 28 76 34C98 40 100 68 86 84C72 98 36 96 30 70Z" fill="url(#'+u+'m)"/>'+fHL(46,52,8,5)+fFace(64,68,1)}],
+24:["a corn on the cob",function(){var k="";for(var r=0;r<7;r++)for(var c=0;c<3;c++)k+='<circle cx="'+(51+c*9)+'" cy="'+(32+r*9)+'" r="3.4" fill="#F2C230"/>';return '<rect x="44" y="22" width="32" height="80" rx="16" fill="#F8D650"/>'+k+'<path d="M44 108C30 90 32 66 46 54C42 76 50 94 60 108Z" fill="#6DBB5A"/><path d="M76 108C90 90 88 66 74 54C78 76 70 94 60 108Z" fill="#5DAA4A"/>'+'<rect x="49" y="68" width="22" height="16" rx="8" fill="#F8D650"/>'+fFace(60,74,.7)}],
+25:["a swede",function(u){return fLeaf(58,32,-110,"#5DAA4A",.8)+fLeaf(62,32,-70,"#6DBB5A",.8)+'<defs>'+fClip(u+"s",'<circle cx="60" cy="68" r="36"/>')+'</defs><g clip-path="url(#'+u+'s)"><rect x="20" y="30" width="80" height="80" fill="#EED79A"/><path d="M20 30H100V60Q80 66 60 62Q40 58 20 64Z" fill="#8E5A8E"/></g>'+fHL(42,52,7,4)+fFace(60,76,1)}],
+26:["a spring onion",function(){return '<rect x="53" y="14" width="9" height="76" rx="4.5" fill="#8CCB5E" transform="rotate(-6 57 80)"/><rect x="60" y="20" width="9" height="70" rx="4.5" fill="#6DBB5A" transform="rotate(8 64 82)"/><rect x="55" y="62" width="10" height="26" fill="#E8F3D6"/><circle cx="60" cy="94" r="14" fill="#F7F3EA"/><path d="M52 106q-2 6-6 8M60 108v7M68 106q2 6 6 8" stroke="#D8CFB8" stroke-width="2" fill="none" stroke-linecap="round"/>'+fFace(60,95,.5)}],
+27:["a cauliflower",function(){return '<path d="M18 80C24 58 44 62 50 86ZM102 80C96 58 76 62 70 86Z" fill="#6FAE5B"/><circle cx="46" cy="54" r="16" fill="#F6F2E3"/><circle cx="74" cy="54" r="16" fill="#F6F2E3"/><circle cx="60" cy="44" r="16" fill="#FBF8EE"/><circle cx="38" cy="70" r="14" fill="#F6F2E3"/><circle cx="82" cy="70" r="14" fill="#F6F2E3"/><circle cx="60" cy="68" r="22" fill="#FBF8EE"/><path d="M36 92C46 82 74 82 84 92C76 102 44 102 36 92Z" fill="#5DAA4A"/>'+fFace(60,68,.95)}],
+28:["an aubergine",function(){return '<path d="M50 36C58 34 64 40 66 48C86 56 96 80 82 94C68 108 40 98 38 76C36 62 44 54 46 46C46 40 46 37 50 36Z" fill="#6B3F93"/>'+fStar(53,40,12,"#5DAA4A")+'<path d="M52 30q-2-8 4-12" stroke="#4F8A3A" stroke-width="4" stroke-linecap="round" fill="none"/>'+fHL(50,64,4,9,20)+fFace(66,78,.9,true)}],
+29:["a butternut squash",function(){return fStem(60,28,8,"#8A6A3A")+'<path d="M50 30C60 24 70 30 70 42C70 52 66 56 72 64C86 78 82 104 60 104C38 104 34 78 48 64C54 56 50 52 50 42C50 34 46 32 50 30Z" fill="#EDB96E"/><ellipse cx="60" cy="86" rx="10" ry="7" fill="#E3A65A" opacity=".5"/>'+fHL(52,44,3,7,10)+fFace(60,78,.95)}],
+30:["a cabbage",function(){return '<circle cx="60" cy="66" r="40" fill="#A3D27E"/><path d="M60 28v76M60 60q-22-6-34-22M60 60q22-6 34-22M60 82q-24-2-38-16M60 82q24-2 38-16" stroke="#85BC5E" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M24 50C28 34 44 28 52 32" stroke="#C8E6A8" stroke-width="3" fill="none" stroke-linecap="round"/>'+fFace(60,70,1)}],
+31:["a coconut",function(){return '<circle cx="60" cy="66" r="38" fill="#7B5236"/><path d="M34 44l6 4M30 62l7 1M38 86l6-4M82 44l-6 4M90 64l-7 1M82 88l-6-4M60 30v7" stroke="#5C3B24" stroke-width="2.4" stroke-linecap="round"/><circle cx="52" cy="42" r="3" fill="#3E2716"/><circle cx="68" cy="42" r="3" fill="#3E2716"/><circle cx="60" cy="50" r="3" fill="#3E2716"/>'+fFace(60,72,1,true)}],
+32:["a jicama",function(){return '<path d="M60 32q-2-8 2-12" stroke="#8A6A3A" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M28 64C26 42 48 32 60 32C72 32 94 42 92 64C92 88 74 98 60 100C46 98 28 88 28 64Z" fill="#CDA57C"/><path d="M60 100q2 7-2 12" stroke="#B48A60" stroke-width="3" fill="none" stroke-linecap="round"/>'+fHL(42,50,8,5)+fFace(60,68,1)}],
+33:["a pineapple",function(u){var l="";for(var i=-3;i<=3;i++){l+='<path d="M'+(60+i*14-30)+' 36L'+(60+i*14+30)+' 112M'+(60+i*14+30)+' 36L'+(60+i*14-30)+' 112" stroke="#D99A26" stroke-width="2" opacity=".6"/>'}return '<path d="M60 44L50 14L58 30L60 8L62 30L70 14Z" fill="#4F9A44"/><path d="M60 44L38 24L52 40ZM60 44L82 24L68 40Z" fill="#5DAA4A"/><defs>'+fClip(u+"p",'<ellipse cx="60" cy="76" rx="28" ry="36"/>')+'</defs><ellipse cx="60" cy="76" rx="28" ry="36" fill="#F3B93D"/><g clip-path="url(#'+u+'p)">'+l+'</g>'+fFace(60,78,.95)}],
+34:["a cantaloupe melon",function(u){return '<defs>'+fClip(u+"c",'<circle cx="60" cy="66" r="42"/>')+'</defs><circle cx="60" cy="66" r="42" fill="#E8C48D"/><g clip-path="url(#'+u+'c)" stroke="#F6E1BA" stroke-width="2.2" fill="none"><path d="M18 50q20 10 42 0t42 0M18 72q20 10 42 0t42 0M18 94q20 10 42 0t42 0M40 22q-10 44 0 88M80 22q10 44 0 88"/></g>'+fFace(60,68,1)}],
+35:["a honeydew melon",function(){return '<ellipse cx="60" cy="66" rx="44" ry="38" fill="#D3EAA4"/><path d="M40 32q-10 34 0 68M80 32q10 34 0 68" stroke="#BEDB86" stroke-width="2.4" fill="none"/>'+fHL(40,48,10,6)+fFace(60,68,1)}],
+36:["a romaine lettuce",function(){return '<path d="M60 14C86 28 90 70 78 102C72 110 48 110 42 102C30 70 34 28 60 14Z" fill="#92CB6E"/><path d="M60 22V104M60 50l-12-8M60 66l12-8M60 82l-12-8" stroke="#DDF2C8" stroke-width="3" fill="none" stroke-linecap="round"/>'+fFace(60,62,.85)}],
+37:["a bunch of Swiss chard",function(){return '<path d="M60 14C88 24 94 62 70 84L60 104L50 84C26 62 32 24 60 14Z" fill="#4F8E3E"/><path d="M60 110V26M60 50l-12-10M60 64l12-10M60 78l-10-8" stroke="#D6334A" stroke-width="3.5" fill="none" stroke-linecap="round"/>'+fFace(60,58,.75,true)}],
+38:["a leek",function(){return '<path d="M52 44C40 30 34 16 40 10C48 22 54 30 58 40ZM68 44C80 30 86 16 80 10C72 22 66 30 62 40Z" fill="#4E8F44"/><path d="M56 40C54 26 56 14 60 8C64 14 66 26 64 40Z" fill="#5DAA4A"/><rect x="48" y="38" width="24" height="26" fill="#B7DB8A"/><rect x="48" y="58" width="24" height="46" rx="10" fill="#F4F1E6"/><path d="M52 104q-3 6-7 7M60 106v7M68 104q3 6 7 7" stroke="#D8CFB8" stroke-width="2" fill="none" stroke-linecap="round"/>'+fFace(60,82,.7)}],
+39:["a watermelon",function(u){var s="";for(var i=0;i<7;i++){var x=14+i*15;s+='<path d="M'+x+' 24q6 10 0 20t0 20t0 20t0 20t0 20" stroke="#2A6B32" stroke-width="5" fill="none"/>'}return '<defs>'+fClip(u+"w",'<ellipse cx="60" cy="66" rx="48" ry="37"/>')+'</defs><ellipse cx="60" cy="66" rx="48" ry="37" fill="#3F9145"/><g clip-path="url(#'+u+'w)">'+s+'</g>'+fHL(36,48,10,5)+fFace(60,68,1,true)}],
+40:["a pumpkin",function(){return '<path d="M60 36q-2-10 6-16" stroke="#6E4A2A" stroke-width="6" stroke-linecap="round" fill="none"/>'+fLeaf(64,30,-10,"#5DAA4A",.9)+'<ellipse cx="38" cy="68" rx="22" ry="30" fill="#EE8126"/><ellipse cx="82" cy="68" rx="22" ry="30" fill="#EE8126"/><ellipse cx="60" cy="68" rx="26" ry="33" fill="#F6922F"/><path d="M48 40q-6 28 0 58M72 40q6 28 0 58" stroke="#DD7420" stroke-width="2.4" fill="none" opacity=".7"/>'+fFace(60,70,1)}]
+};
+var fruitUid=0;
+function fruitFor(wk){wk=Math.max(4,Math.min(40,wk));return FRUITS[wk]}
+function fruitSVG(wk,label){var f=fruitFor(wk),u="fr"+(++fruitUid);return '<svg viewBox="0 0 120 120" role="img" aria-label="'+(label||("About the size of "+f[0]))+'"><ellipse cx="60" cy="112" rx="30" ry="4.5" fill="#3B2A2A" opacity=".08"/>'+f[1](u)+'</svg>'}
+
+function faceIcon(kind,i){
+  var bg=kind==="mood"?["#E3DDF8","#FFF0B8","#CFEFDD","#FFC9D6"][i]:["#CFEFDD","#FFF0B8","#FFD9C4","#FFC2CF"][i],c="#3A2734",m,ex="";
+  if(kind==="mood"){m=["M-6 9Q0 3 6 9","M-5 7H5","M-6 5Q0 11 6 5","M-7 4Q0 14 7 4Z"][i];if(i===0)ex='<path d="M9 2q2 4 0 6q-2-2 0-6Z" fill="#7FB6E8"/>';}
+  else{m=["M-6 5Q0 11 6 5","M-5 6Q0 9 5 6","M-6 7q3-3 6 0t6 0","M-6 9Q0 3 6 9"][i];if(i===3)ex='<path d="M13 -12q3 5 0 7q-3-2 0-7Z" fill="#7FB6E8"/>';}
+  var eyes=(kind!=="mood"&&i===3)?'<path d="M-10-5l5 3M-10 -1l5-3M10-5l-5 3M10-1l-5-3" stroke="'+c+'" stroke-width="2" stroke-linecap="round"/>':'<circle cx="-7" cy="-3" r="2.7" fill="'+c+'"/><circle cx="7" cy="-3" r="2.7" fill="'+c+'"/>';
+  return '<svg viewBox="-22 -22 44 44" aria-hidden="true"><circle r="21" fill="'+bg+'"/><ellipse cx="-12" cy="5" rx="4" ry="2.4" fill="#FF8FA3" opacity=".55"/><ellipse cx="12" cy="5" rx="4" ry="2.4" fill="#FF8FA3" opacity=".55"/>'+eyes+'<path d="'+m+'" fill="'+(kind==="mood"&&i===3?c:"none")+'" stroke="'+c+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'+ex+'</svg>';
+}
+function renderFruit(){
+  var wk=Math.max(4,Math.min(40,Math.floor(gaDays(TODAY)/7))),fw=state.fruitWk==null?wk:state.fruitWk,f=fruitFor(fw),verb=fw===26?"about as long as ":"about the size of ";
+  document.getElementById("fruitBig").innerHTML=fruitSVG(fw);
+  document.getElementById("fruitLine").innerHTML=(fw===wk?"Your baby is "+verb:"At "+fw+" weeks, "+verb)+"<b>"+esc(f[0])+"</b>";
+  document.getElementById("fruitNow").hidden=fw===wk;
+  document.getElementById("fruitPrev").disabled=fw<=4;document.getElementById("fruitNext").disabled=fw>=40;
+}
+/* ---------- home ---------- */
+function latest(){var k=Object.keys(state.days).sort();return k.length?{date:k[k.length-1],e:state.days[k[k.length-1]]}:null}
+function focusSym(){
+  var l=latest();if(!l||!l.e.sym)return SYMS[0];
+  var best=SYMS[0],bv=-1;SYMS.forEach(function(s){var v=l.e.sym[s.k]||0;if(v>bv){bv=v;best=s}});return bv>0?best:SYMS[0];
+}
+function renderHome(){
+  var d=gaDays(TODAY),wk=Math.floor(d/7),dd=d%7;
+  document.getElementById("gaBig").innerHTML=(d<0?"–":wk)+"<span>weeks</span>";
+  document.getElementById("gaSub").textContent="and "+Math.max(0,dd)+" day"+(dd===1?"":"s")+" · day "+Math.max(0,d)+" of 280";
+  var pct=Math.min(100,Math.max(0,d/280*100));
+  document.getElementById("trackFill").style.width=pct+"%";document.getElementById("trackDot").style.left=pct+"%";
+  document.getElementById("trimPill").textContent=wk<13?"1st trimester":(wk<27?"2nd trimester":"3rd trimester");
+  document.getElementById("dueText").textContent="Due "+fmt(state.due);
+  renderFruit();
+
+  var t=state.days[TODAY],tc=document.getElementById("todayCard");
+  if(t){
+    var ch=SYMS.filter(function(s){return t.sym&&t.sym[s.k]>0}).map(function(s){return '<span class="chip'+(t.sym[s.k]===3?" sev3":"")+'">'+s.n+": "+esc(lvShort(s,t.sym[s.k]))+"</span>"}).join("")||'<span class="chip">No symptoms</span>';
+    tc.innerHTML='<div class="cmp-top"><h2>Checked in today</h2><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div><div class="chips">'+ch+'</div><button class="btn soft" type="button" data-act="edit-today">Edit today’s check-in</button>';
+  }else{
+    tc.innerHTML='<div><h2>How are you today?</h2><p class="small muted">A few quick taps, about 30 seconds.</p></div><button class="btn primary block" type="button" data-act="start">Start check-in</button>';
+  }
+
+  var s=focusSym(),w=d/7,p=prevAt(s,w),tw=trendWord(s,w),l=latest(),mine=l&&l.e.sym?l.e.sym[s.k]:null;
+  var sc=document.getElementById("stageCard");
+  var line=!s.pts?"Around 9 in 10 people feel more tired than usual at some point in pregnancy.":s.k==="nausea"?inTen(p)+" people still feel sick at "+wk+" weeks.":inTen(p)+" people have "+s.n.toLowerCase()+" at "+wk+" weeks.";
+  sc.innerHTML='<span class="eyebrow">At your stage</span><h2>'+esc(line)+'</h2>'+dots(p,"big")+
+    '<div class="chips">'+(mine!=null&&mine>0?'<span class="chip you">You: '+esc(lvShort(s,mine))+'</span>':"")+'<span class="chip '+tw.c+'">'+tw.t+'</span></div>'+
+    (s.k==="nausea"?'<p class="small muted">In one study that followed women daily, half of those who felt sick had stopped by 14 weeks, and 9 in 10 by 22 weeks.</p>':"")+
+    '<button class="linkbtn" type="button" data-act="compare" style="align-self:flex-start">Compare all symptoms</button>';
+
+  var n7=0;for(var i=0;i<7;i++){if(state.days[addDays(TODAY,-i)])n7++}
+  document.getElementById("tileDays").innerHTML='<span class="eyebrow">Last 7 days</span><span class="stat num">'+n7+'<span class="small muted" style="font-family:var(--f-body);font-weight:600"> / 7</span></span><span class="small muted">days checked in</span>';
+  var a=[],b=[];for(var j=0;j<14;j++){var e=state.days[addDays(TODAY,-j)];if(e&&e.sym){(j<7?a:b).push(e.sym.nausea||0)}}
+  var avg=function(x){return x.reduce(function(p,c){return p+c},0)/x.length},tt,tcl;
+  if(a.length&&b.length){var da=avg(a)-avg(b);tt=da<-.3?"Easing":(da>.3?"Getting worse":"About the same");tcl=da<-.3?"var(--ok)":(da>.3?"var(--warn)":"var(--ink)")}
+  else{tt="Not enough yet";tcl="var(--muted)"}
+  document.getElementById("tileTrend").innerHTML='<span class="eyebrow">Feeling sick</span><span class="stat" style="font-size:1.35rem;color:'+tcl+'">'+tt+'</span><span class="small muted">this week vs last</span>';
+  renderLinkTip(document.getElementById("linkTip"));
+  renderComing();
+  var pr=patterns(),pt=document.getElementById("patTeaser");
+  if(!pr.list){pt.innerHTML='<span class="eyebrow">Your patterns</span><h3>Unlocks after '+PAT_MIN+' check-ins</h3><div class="meter" aria-hidden="true"><b style="width:'+Math.min(100,pr.n/PAT_MIN*100)+'%"></b></div><p class="small muted">'+pr.n+' of '+PAT_MIN+' so far. Adding when you felt worst and a few tags helps the app spot what goes with your symptoms.</p>'}
+  else{var top=pr.list[0];pt.innerHTML='<span class="eyebrow">Your patterns</span>'+(top?'<h3>'+esc(top.head)+'</h3><p class="small">'+esc(top.body)+'</p>':'<h3>No clear patterns yet</h3><p class="small muted">Keep checking in and adding tags.</p>')+'<button class="linkbtn" type="button" data-act="patterns" style="align-self:flex-start">See all your patterns</button>'}
+}
+/* ---------- linked symptoms ---------- */
+function activeLinks(e){
+  if(!e||!e.sym)return [];
+  return LINKS.filter(function(L){return e.sym[L.b]>0&&L.a.some(function(k){return e.sym[k]>0})});
+}
+function renderLinkTip(el){
+  var l=latest(),recent=l&&(toUTC(TODAY)-toUTC(l.date))/864e5<=2?l.e:null,ls=activeLinks(recent);
+  if(!ls.length){el.hidden=true;el.innerHTML="";return}
+  var L=ls[0];el.hidden=false;
+  el.innerHTML='<span class="eyebrow">You logged both</span><h3>'+esc(L.title)+'</h3><p class="small">'+esc(L.t)+'</p><p class="small muted">Source: <a href="'+L.src[1]+'" target="_blank" rel="noopener">'+esc(L.src[0])+'</a></p>';
+}
+/* ---------- coming up ---------- */
+function aheadPicks(){
+  var w=gaDays(TODAY)/7,l=latest(),mine=[],rest=[];
+  SYMS.forEach(function(s){
+    if(!s.pts)return;
+    var logged=l&&l.e.sym&&l.e.sym[s.k]>0;
+    if(logged)mine.push(s);else if(prevAt(s,w+4)>prevAt(s,w)+4)rest.push(s);
+  });
+  if(!mine.length)mine=[SYMS[0]];
+  return mine.concat(rest).slice(0,4);
+}
+function aheadRows(target){
+  var w=gaDays(TODAY)/7,h="",cw=Math.max(4,Math.min(40,Math.floor(w)));
+  h+='<div class="journey"><span class="mini">'+fruitSVG(cw)+'</span><span class="arrow" aria-hidden="true">\u2192</span><span class="mini">'+fruitSVG(target)+'</span><span class="small">From '+esc(fruitFor(cw)[0])+' to '+esc(fruitFor(target)[0])+'</span></div>';
+  aheadPicks().forEach(function(s){
+    var a=Math.round(prevAt(s,w)),b=Math.round(prevAt(s,target)),c=b<a-4?["down","Usually easing"]:(b>a+4?["up","Usually rising"]:["","About the same"]);
+    h+='<div class="ahead-row"><span class="ahead-name">'+esc(s.n)+'</span><span class="ahead-num">'+a+'% \u2192 '+b+'%</span><span class="chips"><span class="chip '+c[0]+'">'+c[1]+'</span></span></div>';
+  });
+  var wk=Math.floor(w),m=MILES.filter(function(x){return x.to>=wk&&x.from<=target});
+  if(m.length){h+='<div style="display:flex;flex-direction:column;gap:8px;padding-top:6px"><span class="eyebrow">Also around this time</span>';
+    m.forEach(function(x){h+='<div class="mile"><i aria-hidden="true"></i><span>'+esc(x.t)+(x.src?' <a class="small" href="'+x.src[1]+'" target="_blank" rel="noopener">'+esc(x.src[0])+'</a>':"")+'</span></div>'});h+="</div>"}
+  return h;
+}
+function renderComing(){
+  var c=document.getElementById("comingCard"),d=gaDays(TODAY),wk=Math.floor(d/7);
+  if(d<0||wk>=40){c.hidden=true;return}c.hidden=false;
+  var t=Math.min(40,wk+4);
+  c.innerHTML='<span class="eyebrow">Coming up</span><h2 id="aheadHead">What usually happens by '+t+' weeks</h2><p class="small muted">% of people with each symptom, now \u2192 then. This is the typical pattern, not a prediction for you.</p><div id="aheadRows">'+aheadRows(t)+'</div>'+
+    (wk<39?'<label for="aheadWeek" class="small" style="font-weight:700">Look further ahead: week <span id="aheadLbl" class="num">'+t+'</span></label><input type="range" id="aheadWeek" min="'+(wk+1)+'" max="40" value="'+t+'">':"");
+}
+document.getElementById("view-home").addEventListener("input",function(e){
+  if(e.target.id!=="aheadWeek")return;var t=+e.target.value;
+  document.getElementById("aheadLbl").textContent=t;document.getElementById("aheadHead").textContent="What usually happens by "+t+" weeks";
+  document.getElementById("aheadRows").innerHTML=aheadRows(t);
+});
+/* ---------- your patterns ---------- */
+var PAT_MIN=14;
+function mean(a){return a.reduce(function(p,c){return p+c},0)/a.length}
+function lvWord(s,m){return s.lv[Math.min(3,Math.max(0,Math.round(m)))][0].toLowerCase()}
+function patterns(){
+  var es=Object.keys(state.days).sort().map(function(d){return {d:d,e:state.days[d]}}).filter(function(x){return x.e.sym});
+  var n=es.length;if(n<PAT_MIN)return {n:n,list:null};
+  var out=[],splits=TAGS.map(function(t){return {lab:"on days you tagged \u201c"+t.n.toLowerCase()+"\u201d",oth:"on other days",test:function(x){return (x.e.tags||[]).indexOf(t.k)>=0}}});
+  splits.push({lab:"after a bad night\u2019s sleep",oth:"after a better night",excl:"sleep",test:function(x){return (x.e.sym.sleep||0)>=2}});
+  splits.forEach(function(sp){
+    var a=es.filter(sp.test),b=es.filter(function(x){return !sp.test(x)});
+    if(a.length<4||b.length<4)return;
+    SYMS.forEach(function(sy){
+      if(sy.k===sp.excl)return;
+      var ma=mean(a.map(function(x){return x.e.sym[sy.k]||0})),mb=mean(b.map(function(x){return x.e.sym[sy.k]||0})),df=ma-mb;
+      if(Math.abs(df)<0.75)return;
+      var wa=lvWord(sy,ma),wb=lvWord(sy,mb),worse=df>0;
+      out.push({score:Math.abs(df),
+        head:sy.n+" was "+(worse?"worse ":"milder ")+sp.lab,
+        body:(wa!==wb?"Usually "+wa+", compared with "+wb+" "+sp.oth+". ":(worse?"A bit worse":"A bit milder")+" than "+sp.oth.replace(/^on |^after /,function(m){return m==="on "?"":"after "})+". ")+"Based on "+a.length+" and "+b.length+" days."});
+    });
+  });
+  out.sort(function(x,y){return y.score-x.score});out=out.slice(0,4);
+  var nd=es.filter(function(x){return x.e.sym.nausea>0&&x.e.when!=null});
+  if(nd.length>=6){var cnt=[0,0,0,0];nd.forEach(function(x){cnt[x.e.when]++});var mx=cnt.indexOf(Math.max.apply(null,cnt));
+    if(cnt[mx]/nd.length>=0.6)out.unshift({score:9,head:mx===3?"Your sickness usually lasts all day":"Your sickness is usually worst in the "+WHEN[mx].toLowerCase(),body:"True on "+cnt[mx]+" of "+nd.length+" days you felt sick and said when.",when:mx})}
+  var last=[],prev=[];es.forEach(function(x){var ago=(toUTC(TODAY)-toUTC(x.d))/864e5;if(ago<7)last.push(x.e.sym.nausea||0);else if(ago<14)prev.push(x.e.sym.nausea||0)});
+  if(last.length>=3&&prev.length>=3&&mean(prev)>0){
+    var w=gaDays(TODAY)/7,typ=(prevAt(SYMS[0],w)-prevAt(SYMS[0],w-1))/prevAt(SYMS[0],w-1),mine=(mean(last)-mean(prev))/mean(prev),t;
+    if(typ<0&&mine<typ-0.1)t=["Your sickness is easing faster than typical","It dropped more this week than usually happens at "+Math.floor(w)+" weeks."];
+    else if(typ<0&&mine>0.1)t=["Your sickness went up this week","At this stage it usually eases. Keep an eye on it, and mention it to your midwife if it carries on."];
+    else t=["Your sickness is following the typical pattern","This week compared with last is in line with what usually happens at "+Math.floor(w)+" weeks."];
+    out.push({score:0,head:t[0],body:t[1]});
+  }
+  return {n:n,list:out};
+}
+function renderPatterns(){
+  var pr=patterns(),el=document.getElementById("patCard"),h='<div><h2>Your patterns</h2><p class="small muted">What tends to go together in your own check-ins. These show things that happen together, not what causes what.</p></div>';
+  if(!pr.list){h+='<div class="meter" aria-hidden="true"><b style="width:'+Math.min(100,pr.n/PAT_MIN*100)+'%"></b></div><p class="small">'+pr.n+' of '+PAT_MIN+' check-ins. Patterns appear once there\u2019s enough to go on. Adding when you felt worst and a few tags in your check-in helps.</p>'}
+  else if(!pr.list.length){h+='<p class="small">No clear patterns yet. That can mean your symptoms don\u2019t follow your tags much, or there isn\u2019t enough variety in your days yet.</p>'}
+  else{h+='<div>'+pr.list.map(function(x){return '<div class="pat"><b>'+esc(x.head)+'</b><span class="small">'+esc(x.body)+'</span></div>'}).join("")+'</div>'}
+  el.innerHTML=h;
+}
+document.getElementById("view-home").addEventListener("click",function(e){
+  var b=e.target.closest("[data-act]");if(!b)return;
+  if(b.dataset.act==="start"||b.dataset.act==="edit-today")go("checkin");
+  if(b.dataset.act==="compare"){state.open=focusSym().k;go("compare")}
+  if(b.dataset.act==="patterns"){go("log")}
+  if(b.dataset.act==="fruit-prev"||b.dataset.act==="fruit-next"){var cw=Math.max(4,Math.min(40,Math.floor(gaDays(TODAY)/7))),cur=state.fruitWk==null?cw:state.fruitWk;state.fruitWk=Math.max(4,Math.min(40,cur+(b.dataset.act==="fruit-next"?1:-1)));renderFruit()}
+  if(b.dataset.act==="fruit-now"){state.fruitWk=null;renderFruit()}
+});
+document.getElementById("editDue").addEventListener("click",function(){var f=document.getElementById("dueForm");f.hidden=!f.hidden;document.getElementById("dueInput").value=state.due});
+document.getElementById("dueForm").addEventListener("submit",async function(e){e.preventDefault();var v=document.getElementById("dueInput").value;if(!v)return;this.hidden=true;try{await saveDue(v)}catch(err){}render()});
+
+/* ---------- check-in flow ---------- */
+var STEPS=SYMS.length+3; /* symptoms, mood, context, final */
+var ST_MOOD=SYMS.length,ST_CTX=SYMS.length+1,ST_FINAL=SYMS.length+2;
+function blank(){var s={};SYMS.forEach(function(x){s[x.k]=null});return {sym:s,mood:null,note:"",flags:[],none:false,when:null,tags:[]}}
+function startFlow(date){
+  state.date=date;state.justSaved=false;var e=state.days[date];
+  state.draft=e?{sym:Object.assign(blank().sym,e.sym||{}),mood:e.mood==null?null:e.mood,note:e.note||"",flags:(e.flags||[]).slice(),none:!(e.flags||[]).length,when:e.when==null?null:e.when,tags:(e.tags||[]).slice()}:blank();
+  state.step=0;
+}
+function renderFlow(){
+  var body=document.getElementById("flowBody"),st=state.step,d=state.draft;
+  document.getElementById("flowBack").hidden=st===0||state.justSaved;
+  document.getElementById("flowBar").style.width=(state.justSaved?100:(st+1)/STEPS*100)+"%";
+  document.getElementById("stepCount").textContent=state.justSaved?"Done":(st+1)+" of "+STEPS;
+  var h="";
+  if(state.justSaved){renderDone(body);return}
+  if(st===0){
+    var y=state.days[addDays(state.date,-1)];
+    h+='<div class="datebar small"><span class="muted">Checking in for</span><input type="date" id="flowDate" value="'+state.date+'" max="'+TODAY+'" aria-label="Date"><span class="muted num">'+gaStr(state.date)+' weeks</span></div>';
+    if(y&&!state.days[state.date])h+='<button class="btn soft" type="button" data-act="same">Same as yesterday, then review</button>';
+  }
+  if(st<SYMS.length){
+    var s=SYMS[st];
+    h+='<div class="q"><span class="eyebrow">'+esc(s.n)+(s.alt?' · '+esc(s.alt):'')+'</span><h1>'+esc(s.q)+'</h1></div><p class="explain">'+s.ex+'</p><div class="options" role="group" aria-label="'+esc(s.n)+'">';
+    s.lv.forEach(function(l,i){
+      var sz=[0,10,16,22][i];
+      h+='<button class="opt" type="button" data-v="'+i+'" aria-pressed="'+(d.sym[s.k]===i)+'"><span class="lvl" aria-hidden="true">'+faceIcon("sym",i)+'</span><span><b>'+esc(l[0])+'</b><span class="d">'+esc(l[1])+'</span></span></button>';
+    });
+    h+="</div>";
+  }else if(st===ST_MOOD){
+    h+='<div class="q"><span class="eyebrow">Mood</span><h1>How are you feeling in yourself?</h1></div><div class="options" role="group" aria-label="Mood">';
+    MOODS.forEach(function(m,i){h+='<button class="opt" type="button" data-v="'+i+'" aria-pressed="'+(d.mood===i)+'"><span class="lvl" aria-hidden="true">'+faceIcon("mood",i)+'</span><span><b>'+m[0]+'</b><span class="d">'+m[1]+'</span></span></button>'});
+    h+="</div>";
+  }else if(st===ST_CTX){
+    h+='<div class="q"><span class="eyebrow">Optional</span><h1>Anything going on today?</h1></div><p class="explain">This helps the app spot your own patterns over time. Skip it if you like.</p>';
+    h+='<h3>When did you feel worst?</h3><div class="seg" role="group" aria-label="When you felt worst">';
+    WHEN.forEach(function(x,i){h+='<button type="button" data-when="'+i+'" aria-pressed="'+(d.when===i)+'">'+x+'</button>'});
+    h+='</div><h3>Tag your day</h3><div class="tags" role="group" aria-label="Tags">';
+    TAGS.forEach(function(t){h+='<button type="button" data-tag="'+t.k+'" aria-pressed="'+(d.tags.indexOf(t.k)>=0)+'">'+esc(t.n)+'</button>'});
+    h+='</div><button class="btn primary block" type="button" data-act="next">Next</button>';
+  }else{
+    h+='<div class="q"><span class="eyebrow">Last step</span><h1>Anything else?</h1></div>';
+    h+='<label for="note" class="small" style="font-weight:700">In your own words <span class="muted" style="font-weight:500">(optional)</span></label><textarea id="note" placeholder="e.g. Felt sick mostly in the evening, worse with the smell of coffee. Ginger biscuits helped a bit.">'+esc(d.note)+'</textarea>';
+    h+='<div class="q"><h3>Do any of these apply today?</h3><p class="small muted">Tick any that are true, or “None of these”.</p></div><div class="flags">';
+    FLAGS.forEach(function(f){h+='<label class="flag"><input type="checkbox" id="flag-'+f.k+'" data-k="'+f.k+'"'+(d.flags.indexOf(f.k)>=0?" checked":"")+'><span>'+esc(f.t)+(f.s?'<small>'+esc(f.s)+'</small>':"")+'</span></label>'});
+    h+='<label class="flag none"><input type="checkbox" id="flag-none" data-k="none"'+(d.none?" checked":"")+'><span>None of these</span></label></div>';
+    h+='<div id="flagAlert" class="alert" hidden aria-live="polite"></div>';
+    h+='<div class="savebar"><button class="btn primary block" id="saveBtn" type="button">Save check-in</button></div><p class="small" id="saveMsg" role="status"></p>';
+  }
+  body.innerHTML=h;body.classList.remove("fade");void body.offsetWidth;body.classList.add("fade");
+  if(st===ST_FINAL)renderFlagAlert();
+}
+function renderFlagAlert(){
+  var a=state.draft.flags,el=document.getElementById("flagAlert");if(!el)return;
+  if(!a.length){el.hidden=true;return}
+  el.hidden=false;
+  if(a.indexOf("bleed")>=0||a.indexOf("pain")>=0){
+    el.innerHTML="<strong>Call your maternity unit now</strong><span>Bleeding or severe tummy pain needs checking today. If it’s heavy, or you feel very unwell, call 999.</span>";
+  }else if(a.length===1&&a[0]==="lowmood"){
+    el.innerHTML="<strong>Talk to your midwife or GP</strong><span>Feeling low or anxious in pregnancy is common and there is help. You don’t need to wait for your next appointment. If you ever feel unsafe, call 999 or Samaritans on <span class=\"num\">116 123</span>.</span>";
+  }else{
+    el.innerHTML="<strong>Speak to your midwife or maternity triage today</strong><span>These can be signs of severe pregnancy sickness (hyperemesis gravidarum), which is treatable. Out of hours, call NHS 111.</span>";
+  }
+}
+function advance(){if(state.step<STEPS-1){state.step++;renderFlow();window.scrollTo(0,0)}}
+var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+document.getElementById("flowBack").addEventListener("click",function(){if(state.step>0){state.step--;renderFlow()}});
+document.getElementById("flowBody").addEventListener("click",function(e){
+  var b=e.target.closest("button");if(!b)return;
+  if(b.dataset.act==="same"){var y=state.days[addDays(state.date,-1)];state.draft.sym=Object.assign(blank().sym,y.sym||{});state.draft.mood=y.mood==null?null:y.mood;state.step=ST_FINAL;renderFlow();return}
+  if(b.dataset.act==="to-compare"){state.open=focusSym().k;go("compare");return}
+  if(b.dataset.act==="to-home"){go("home");return}
+  if(b.dataset.act==="next"){advance();return}
+  if(b.dataset.when!=null){var wv=+b.dataset.when;state.draft.when=state.draft.when===wv?null:wv;b.parentNode.querySelectorAll("button").forEach(function(x){x.setAttribute("aria-pressed",String(+x.dataset.when===state.draft.when))});return}
+  if(b.dataset.tag){var tg=state.draft.tags,ti=tg.indexOf(b.dataset.tag);if(ti<0)tg.push(b.dataset.tag);else tg.splice(ti,1);b.setAttribute("aria-pressed",String(ti<0));return}
+  if(b.classList.contains("opt")){
+    var v=+b.dataset.v;
+    if(state.step<SYMS.length)state.draft.sym[SYMS[state.step].k]=v;else state.draft.mood=v;
+    b.parentNode.querySelectorAll(".opt").forEach(function(x){x.setAttribute("aria-pressed",x===b?"true":"false")});
+    setTimeout(advance,reduce?0:220);return;
+  }
+  if(b.id==="saveBtn")save(b);
+});
+document.getElementById("flowBody").addEventListener("change",function(e){
+  if(e.target.id==="flowDate"){var v=e.target.value||TODAY;if(v>TODAY)v=TODAY;startFlow(v);renderFlow();return}
+  var k=e.target.dataset.k;if(!k)return;var d=state.draft;
+  if(k==="none"){d.none=e.target.checked;if(d.none){d.flags=[];document.querySelectorAll(".flags input").forEach(function(x){if(x.dataset.k!=="none")x.checked=false})}}
+  else{var i=d.flags.indexOf(k);if(e.target.checked&&i<0)d.flags.push(k);if(!e.target.checked&&i>=0)d.flags.splice(i,1);if(d.flags.length){d.none=false;document.getElementById("flag-none").checked=false}}
+  renderFlagAlert();
+});
+document.getElementById("flowBody").addEventListener("input",function(e){if(e.target.id==="note")state.draft.note=e.target.value});
+async function save(btn){
+  var d=state.draft,msg=document.getElementById("saveMsg"),sym={};
+  SYMS.forEach(function(s){sym[s.k]=d.sym[s.k]==null?0:d.sym[s.k]});
+  btn.disabled=true;msg.textContent="Saving…";
+  try{await saveDay(state.date,{sym:sym,mood:d.mood,note:d.note.trim(),flags:d.flags.slice(),when:d.when,tags:d.tags.slice(),saved:new Date().toISOString()});state.justSaved=true;renderFlow()}
+  catch(e){msg.style.color="var(--warn)";msg.textContent="Couldn’t save. Check your connection and try again.";btn.disabled=false}
+}
+function renderDone(body){
+  var e=state.days[state.date],s=focusSym(),w=gaDays(state.date)/7,p=prevAt(s,w),mine=e&&e.sym?e.sym[s.k]:0,warn=e&&e.flags&&e.flags.length;
+  body.innerHTML='<div class="card done"><span class="tick"><span class="burst" aria-hidden="true">'+[-46,-28,-12,4,18,34,50,-36,40].map(function(x,i){return '<i style="--x:'+x+'px;--d:'+(i*70)+'ms"></i>'}).join("")+'</span>'+fruitSVG(Math.floor(gaDays(state.date)/7)).replace("<svg ",'<svg class="fr" ')+'</span><h1>All logged!</h1>'+
+    '<p>'+(mine>0?"You logged "+esc(s.n.toLowerCase())+" as "+esc(lvShort(s,mine).toLowerCase())+". ":"")+(s.pts?esc(inTen(p))+" people have "+esc(s.n.toLowerCase())+" at "+Math.floor(w)+" weeks.":"Around 9 in 10 people feel more tired than usual at some point in pregnancy.")+"</p>"+dots(p)+
+    (activeLinks(e).length?'<div class="card tip" style="padding:14px"><h3>'+esc(activeLinks(e)[0].title)+'</h3><p class="small">'+esc(activeLinks(e)[0].t)+'</p></div>':"")+
+    (warn?'<p class="alert"><strong>Remember to make that call</strong><span>You ticked a warning sign. Please contact your midwife, maternity unit or NHS 111.</span></p>':"")+
+    '<button class="btn primary block" type="button" data-act="to-compare">See how you compare</button><button class="btn soft block" type="button" data-act="to-home">Back to today</button></div>';
+  body.classList.remove("fade");void body.offsetWidth;body.classList.add("fade");
+}
+
+/* ---------- compare ---------- */
+function renderCompare(){
+  var d=gaDays(TODAY),wk=Math.floor(d/7),w=d/7,l=latest();
+  document.getElementById("cmpTitle").textContent="At "+wk+" weeks";
+  var h="";
+  SYMS.forEach(function(s){
+    var p=prevAt(s,w),tw=trendWord(s,w),open=state.open===s.k;
+    var evc=s.ev==="Good"?"":'<span class="chip">'+s.ev+' evidence</span>';var you=l&&l.e.sym&&l.e.sym[s.k]!=null?'<span class="chip you">You: '+esc(lvShort(s,l.e.sym[s.k]))+'</span>':"";
+    h+='<button type="button" class="cmp" data-k="'+s.k+'" aria-expanded="'+open+'"><span class="cmp-top"><span><span class="cmp-name">'+esc(s.n)+'</span>'+(s.alt?' <span class="cmp-sub">('+esc(s.alt)+')</span>':"")+'</span><span class="cmp-freq">'+esc(inTen(p).replace("About ",""))+'</span></span>'+dots(p)+'<span class="chips">'+you+'<span class="chip '+tw.c+'">'+tw.t+'</span>'+evc+'</span></button>';
+    if(open)h+='<div class="detail">'+(s.pts?curve(s)+'<div class="legend"><span><i style="background:var(--accent)"></i>% of people with this</span><span><i style="background:var(--you)"></i>Your week</span></div>':"")+evidence(s)+'</div>';
+  });
+  document.getElementById("cmpList").innerHTML=h;
+}
+document.getElementById("cmpList").addEventListener("click",function(e){var b=e.target.closest(".cmp");if(!b)return;state.open=state.open===b.dataset.k?null:b.dataset.k;renderCompare()});
+function evidence(s){
+  var cls=s.ev==="Good"?"down":(s.ev==="Limited"?"up":"");
+  return '<div class="evid"><span class="chip '+cls+'">'+s.ev+' evidence</span><p class="small">'+esc(s.evText)+'</p><p class="small muted">Source'+(s.src.length>1?"s":"")+': '+s.src.map(function(x){return '<a href="'+x[1]+'" target="_blank" rel="noopener">'+esc(x[0])+'</a>'}).join("; ")+'</p>'+LINKS.filter(function(L){return L.b===s.k||L.a.indexOf(s.k)>=0}).map(function(L){return '<p class="small"><b>Linked:</b> '+esc(L.t)+' <a href="'+L.src[1]+'" target="_blank" rel="noopener">'+esc(L.src[0])+'</a></p>'}).join("")+'</div>';
+}
+function curve(s){
+  var W=340,H=170,L=34,R=12,T=12,B=26,x=function(w){return L+(w-4)/36*(W-L-R)},y=function(v){return T+(1-v/100)*(H-T-B)};
+  var g='<div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+esc(s.n)+': how common it is, week 4 to 40">';
+  g+='<rect x="'+x(13)+'" y="'+T+'" width="'+(x(27)-x(13))+'" height="'+(H-T-B)+'" fill="var(--surface-2)"/>';
+  [0,50,100].forEach(function(v){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(v)+'" y2="'+y(v)+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(y(v)+3)+'" text-anchor="end">'+v+'%</text>'});
+  [4,13,27,40].forEach(function(w){g+='<text x="'+x(w)+'" y="'+(H-8)+'" text-anchor="middle">'+w+'w</text>'});
+  var d="";for(var w=4;w<=40;w+=0.5){d+=(w===4?"M":"L")+x(w).toFixed(1)+" "+y(prevAt(s,w)).toFixed(1)}
+  g+='<path d="'+d+"L"+x(40)+" "+y(0)+"L"+x(4)+" "+y(0)+'Z" fill="var(--accent)" fill-opacity=".14"/><path d="'+d+'" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>';
+  var cw=Math.min(40,Math.max(4,gaDays(TODAY)/7)),cv=prevAt(s,cw);
+  g+='<line x1="'+x(cw)+'" x2="'+x(cw)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="var(--you)" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="'+x(cw)+'" cy="'+y(cv)+'" r="6" fill="var(--you)" stroke="var(--surface)" stroke-width="2"/>';
+  g+='<text x="'+Math.min(x(cw)+10,W-R-62)+'" y="'+Math.max(T+10,y(cv)-10)+'" style="fill:var(--ink);font-weight:700">'+Math.round(cv)+'% now</text></svg></div>';
+  return g;
+}
+
+/* ---------- log ---------- */
+var trendSel=document.getElementById("trendSym");
+trendSel.innerHTML=SYMS.map(function(s){return '<option value="'+s.k+'">'+esc(s.n)+'</option>'}).join("");
+trendSel.addEventListener("change",renderLog);
+function renderLog(){
+  document.getElementById("notesText").textContent=buildNotes();
+  renderPatterns();
+  var keys=Object.keys(state.days).sort(),s=symBy(trendSel.value),box=document.getElementById("trend");
+  if(!keys.length){box.innerHTML='<p class="empty">Your chart appears after your first check-in.</p>'}
+  else{
+    var ws=keys.map(function(d){return gaDays(d)/7}),w0=Math.floor(Math.min.apply(null,ws)),w1=Math.ceil(Math.max.apply(null,ws));
+    if(w1-w0<2){w0=Math.max(0,w0-1);w1=w0+3}
+    var W=340,H=160,L=78,R=12,T=12,B=24,x=function(w){return L+(w-w0)/(w1-w0)*(W-L-R)},y=function(v){return T+(1-v/3)*(H-T-B)};
+    var g='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Your '+esc(s.n)+' by week">';
+    s.lv.forEach(function(l,i){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y(i)+'" y2="'+y(i)+'" stroke="var(--line)"/><text x="'+(L-6)+'" y="'+(y(i)+3)+'" text-anchor="end">'+esc(l[0])+'</text>'});
+    var step=Math.max(1,Math.ceil((w1-w0)/6));for(var w=w0;w<=w1;w+=step){g+='<text x="'+x(w)+'" y="'+(H-6)+'" text-anchor="middle">'+w+'w</text>'}
+    var pts=keys.map(function(d){var e=state.days[d];return {w:gaDays(d)/7,v:e.sym&&e.sym[s.k]!=null?e.sym[s.k]:0}});
+    if(pts.length>1)g+='<path d="'+pts.map(function(p,i){return (i?"L":"M")+x(p.w).toFixed(1)+" "+y(p.v).toFixed(1)}).join("")+'" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/>';
+    pts.forEach(function(p,i){var last=i===pts.length-1;g+='<circle cx="'+x(p.w)+'" cy="'+y(p.v)+'" r="'+(last?5.5:3.5)+'" fill="'+(last?"var(--you)":"var(--accent)")+'"/>'});
+    box.innerHTML=g+"</svg>";
+  }
+  var list=document.getElementById("entries");
+  if(!keys.length){list.innerHTML='<p class="empty">No check-ins yet. Tap <strong>Check in</strong> below to log today.</p>';return}
+  list.innerHTML=keys.slice().reverse().map(function(d){
+    var e=state.days[d],chips=SYMS.filter(function(s){return e.sym&&e.sym[s.k]>0}).map(function(s){return '<span class="chip'+(e.sym[s.k]===3?" sev3":"")+'">'+esc(s.n)+": "+esc(lvShort(s,e.sym[s.k]))+"</span>"}).join("");
+    if(e.flags&&e.flags.length)chips+='<span class="chip up">'+e.flags.length+' warning sign'+(e.flags.length>1?"s":"")+'</span>';
+    return '<div class="entry"><div class="entry-head"><strong>'+fmt(d,{weekday:"short",day:"numeric",month:"short"})+'</strong><span class="small muted num">'+gaStr(d)+' weeks</span></div><div class="chips">'+(chips||'<span class="chip">No symptoms</span>')+(e.mood!=null?'<span class="chip">Mood: '+MOODS[e.mood][0]+'</span>':"")+'</div>'+(e.note?'<p class="small">'+esc(e.note)+'</p>':"")+'<div><button class="linkbtn small" type="button" data-edit="'+d+'">Edit</button></div></div>';
+  }).join("");
+}
+document.getElementById("entries").addEventListener("click",function(e){var b=e.target.closest("[data-edit]");if(!b)return;startFlow(b.dataset.edit);go("checkin",{keep:true})});
+function buildNotes(){
+  var from=addDays(TODAY,-13),keys=Object.keys(state.days).filter(function(d){return d>=from&&d<=TODAY}).sort();
+  var out="Pregnancy symptom summary\n"+gaStr(TODAY)+" weeks today · due "+fmt(state.due)+"\nLast 14 days: "+keys.length+" check-in"+(keys.length===1?"":"s")+"\n";
+  if(!keys.length)return out+"\nNo check-ins in the last 14 days yet.";
+  out+="\n";
+  SYMS.forEach(function(s){
+    var vals=keys.map(function(d){var e=state.days[d];return e.sym&&e.sym[s.k]!=null?e.sym[s.k]:0}),on=vals.filter(function(v){return v>0}).length;if(!on)return;
+    var worst=Math.max.apply(null,vals),half=Math.ceil(vals.length/2),a=vals.slice(0,half),b=vals.slice(half),avg=function(x){return x.length?x.reduce(function(p,c){return p+c},0)/x.length:0};
+    var dir=vals.length>=4?(avg(b)<avg(a)-.3?", easing":(avg(b)>avg(a)+.3?", getting worse":", about the same")):"";
+    out+="• "+s.n+(s.alt?" ("+s.alt+")":"")+": "+on+" of "+vals.length+" days, worst: "+lvShort(s,worst).toLowerCase()+dir+"\n";
+  });
+  var fl={};keys.forEach(function(d){(state.days[d].flags||[]).forEach(function(f){(fl[f]=fl[f]||[]).push(d)})});
+  var fk=Object.keys(fl);
+  if(fk.length){out+="\nWarning signs I ticked:\n";fk.forEach(function(f){var t=FLAGS.find(function(x){return x.k===f});out+="• "+(t?t.t:f)+" ("+fl[f].map(function(d){return fmt(d,{day:"numeric",month:"short"})}).join(", ")+")\n"})}
+  var pr=patterns();if(pr.list){var wt=pr.list.find(function(x){return x.when!=null});if(wt)out+="\nPattern: "+wt.head.replace("Your","My")+" ("+wt.body.replace("True on ","")+")\n"}
+  var notes=keys.filter(function(d){return state.days[d].note}).slice(-5);
+  if(notes.length){out+="\nIn my own words:\n";notes.forEach(function(d){out+="• "+fmt(d,{day:"numeric",month:"short"})+": "+state.days[d].note+"\n"})}
+  return out.trim();
+}
+document.getElementById("copyBtn").addEventListener("click",function(){
+  var t=document.getElementById("copyToast"),txt=buildNotes();
+  var sel=function(){var r=document.createRange();r.selectNodeContents(document.getElementById("notesText"));var s=window.getSelection();s.removeAllRanges();s.addRange(r);t.textContent="Text selected. Use Copy on your phone."};
+  try{navigator.clipboard.writeText(txt).then(function(){t.textContent="Copied"},sel)}catch(e){sel()}
+});
+
+/* ---------- render ---------- */
+function render(){
+  if(state.view==="home")renderHome();
+  if(state.view==="checkin")renderFlow();
+  if(state.view==="compare")renderCompare();
+  if(state.view==="log")renderLog();
+}
+startFlow(TODAY);
+var h=(location.hash||"").slice(1);
+go(VIEWS.indexOf(h)>=0?h:"home");
+connect();
+})();
+</script>
+
+</body>
+</html>
