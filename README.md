@@ -4,6 +4,9 @@ A pregnancy symptom tracker that answers one question: **"Is what I'm feeling no
 
 Bump & Compare is a prototype. It is for testing with a small group, not a finished medical product.
 
+- **App:** https://kathyveloso.github.io/Bump-and-compare/
+- **About page:** https://kathyveloso.github.io/Bump-and-compare/about/
+
 ## What it does
 
 - **Daily check-in.** One question per screen: feeling sick, vomiting, tiredness, heartburn, back pain and sleep, with a plain description for every answer. It also asks about mood, has an optional "anything going on today?" step, and lists warning signs.
